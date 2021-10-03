@@ -94,8 +94,8 @@ jobs:
 
       - name: Build
         run: |
-          sed -i 's/0.0.0/${{env.CURRENT}}/g' Content/bios.json
-          sed -i 's/0.0.0/${{env.CURRENT}}/g' PixelVision8.CoreDesktop.csproj
+          sed -i 's/0.0.0/${{env.CURRENT}}/g' App/Content/bios.json
+          sed -i 's/0.0.0/${{env.CURRENT}}/g' App/SpaceStation8.CoreDesktop.csproj
           cd .gulp
           npm install
           npm install gulp -g
