@@ -11,7 +11,7 @@
             "request": "launch",
             "preLaunchTask": "build",
             "program": "${workspaceFolder}/App/bin/Debug/net5.0/SpaceStation8.dll",
-            "args": [],
+            "args": ["Game"],
             "cwd": "${workspaceFolder}/",
             "console": "internalConsole",
             "stopAtEntry": false

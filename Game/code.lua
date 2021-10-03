@@ -8,13 +8,14 @@
   Learn more about making Pixel Vision 8 games at http://pixelvision8.com
 ]]--
 
-print("Loaded")
-
 -- Load scenes
+LoadScript("scene-loader")
 LoadScript("scene-splash")
 LoadScript("scene-editor")
 LoadScript("scene-over")
 LoadScript("scene-game")
+
+LOADER, SPLASH, EDITOR, PLAYER = 1, 2, 3, 4
 
 -- Calculate the level size
 levelSize = {x = 20, y = 18}
@@ -25,27 +26,28 @@ width = TilemapSize().x / levelSize.x
 -- Create a variable to store the active scene
 local activeScene = nil
 
+local activeSceneId = 1
+
 -- The Init() method is part of the game's lifecycle and called a game starts. We are going to
 -- use this method to configure background color, ScreenBufferChip and draw a text box.
 function Init()
 
   -- Create a table for each of the scenes that make up the game
   scenes = {
+    LoaderScene:Init(),
     SplashScene:Init(),
     EditorScene:Init(),
-    -- LevelScene:Init(),
-    -- GameScene:Init(),
+    GameScene:Init(),
     -- OverScene:Init()
   }
 
   -- Switch to the first scene
-  SwitchScene(1)
+  SwitchScene(LOADER)
 
 end
 
 function SetSystemColor()
 
-  print("Sys color")
   -- look to see what key combination is pressed
 
   local dir = nil
@@ -88,8 +90,10 @@ end
 
 function SwitchScene(id)
 
+  activeSceneId = id
+
   -- Set the new active scene
-  activeScene = scenes[id]
+  activeScene = scenes[activeSceneId]
 
   -- Call reset on the new active scene
   activeScene:Reset()
@@ -115,6 +119,14 @@ function Update(timeDelta)
     activeScene:Update(timeDelta)
   end
 
+  if(Key(Keys.Escape, InputState.Released)) then
+
+    SaveState()
+    
+    -- TODO need to save the current tilemap
+    LoadGame("/PixelVisionOS/Tools/SettingsTool/")
+
+  end
 
 
 end
@@ -131,6 +143,34 @@ function Draw()
   if(activeScene ~= nil) then
     activeScene:Draw()
   end
+
+end
+
+function SaveState()
+  
+  -- Save the current session ID
+  WriteSaveData("sessionID", SessionID())
+
+  -- Make sure we don't save paths in the tmp directory
+  WriteSaveData("lastSceneId", activeSceneId)
+
+  WriteSaveData("lastState", activeScene:SaveState())
+ 
+  -- Save the current selection
+  -- WriteSaveData("selection", (self.windowIconButtons ~= nil and editorUI:ToggleGroupSelections(self.windowIconButtons)[1] or 0))
+
+
+  -- local history = ""
+
+  -- for key, value in pairs(self.pathHistory) do
+  --   -- print("key", key, dump(value))
+
+  --   history = history .. key .. ":" .. value.scrollPos .. (value.selection == nil and "" or ("," .. value.selection.Path)) .. ";"
+
+  -- end
+
+  -- -- Make sure we don't save paths in the tmp directory
+  -- WriteSaveData("history", history)
 
 end
 

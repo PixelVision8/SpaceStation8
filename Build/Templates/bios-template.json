@@ -1,4 +1,5 @@
 {
+	"AutoRun": "/PixelVisionOS/Tools/Game/",
     "ArchiveExtensions": "zip,pv8,pvt,pvs,pva,pvr",
     "FileExtensions": "png,lua,json,txt,wav,cs",
     "RequiredFiles": "data.json,info.json",

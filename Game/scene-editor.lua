@@ -30,7 +30,13 @@ function EditorScene:Init()
     cursorY = 0,
     tileId = 0,
     selectionX = 0,
-    spriteId = 0
+    spriteId = 0,
+    startTimer = -1,
+    startDelay = 1000,
+    startCount = 2,
+    startCounts = 2,
+    selectLock = false,
+    startLock = false
   }
   setmetatable(_editor, EditorScene) -- make Account handle lookup
 
@@ -39,6 +45,11 @@ function EditorScene:Init()
 end
 
 function EditorScene:Reset()
+
+  self.selectLock = Button(Buttons.Select, InputState.Down)
+  self.startLock = Button(Buttons.Start, InputState.Down)
+
+  self.startTimer = -1
 
   self.cursorCanvas:SetStroke(4, 1)
   self.cursorCanvas:DrawRectangle(0, 0, self.cursorCanvas.Width, self.cursorCanvas.Height)
@@ -59,6 +70,16 @@ end
 function EditorScene:Update(timeDelta)
 
   self.inputTime = self.inputTime + timeDelta
+
+  -- if(Button(Buttons.Select, InputState.Down) and Button(Buttons.Start, InputState.Down)) then
+    
+
+  --   -- TODO need to clean this up so it warns the player and resets the map
+  --   SwitchScene(SPLASH)
+
+  --   return
+
+  -- end
 
   if(self.inputTime > self.inputDelay) then
     
@@ -104,12 +125,16 @@ function EditorScene:Update(timeDelta)
 
       self:ResetBlink()
     
-    elseif(Button(Buttons.Select)) then
+    elseif(Button(Buttons.Select) and self.selectLock == false) then
 
       self.currentTile = Repeat(self.currentTile + 1, 20)
 
       -- Reset the alt tile
       self.altTile = false
+
+    elseif(Button(Buttons.Select, InputState.Released)) then
+
+      self.selectLock = false
 
     end
 
@@ -153,6 +178,44 @@ function EditorScene:Update(timeDelta)
 
   end
 
+  if((Button(Buttons.Start, InputState.Down) and self.startLock == false) ) then
+
+
+    self.startTimer = self.startTimer + timeDelta
+
+    if(self.startTimer > self.startDelay) then
+
+      self.startTimer = 0
+      
+      if(self.startCount > 0) then
+        
+        self.startCount = self.startCount - 1
+
+      else
+        
+        -- Reset
+        self.startTimer = 0
+        self.startCount = self.startCounts
+
+
+        -- TODO clear data if we are going back to load screen and go to the loader instead of the splash screen
+         -- Switch to play scene
+         SwitchScene(Button(Buttons.Select) and SPLASH or PLAYER)
+
+      end
+
+    end
+    
+  elseif(Button(Buttons.Start, InputState.Released) or Button(Buttons.Select, InputState.Released)) then
+
+    -- Reset
+    self.startTimer = -1
+    self.startCount = self.startCounts
+
+    self.startLock = false
+
+  end
+
 end
 
 function EditorScene:ResetBlink()
@@ -163,27 +226,48 @@ end
 
 function EditorScene:Draw()
 
-  -- Draw the cursor
-  if(self.blink == true) then
-
-    -- Mask off the background
-    DrawRect(self.cursorX, self.cursorY, 8, 8, BackgroundColor(), DrawMode.Sprite)
-
-    -- Draw the currently selected tile
-    DrawSprite(self.spriteId, self.cursorX, self.cursorY, false, false, DrawMode.Sprite)
+  if(self.startTimer > -1) then
+    
+    DrawRect(0, 0, Display().X, 7, 0, DrawMode.Sprite)
+    DrawText((Button(Buttons.Select) and "QUIT" or "START") .. " GAME IN " .. self.startCount + 1, 52, -1, DrawMode.SpriteAbove, "medium", 3, -4)
 
   else
 
-    -- Draw the cursor border
-    self.cursorCanvas:DrawPixels(self.cursorX + self.cursorOffset.X, self.cursorY + self.cursorOffset.Y, DrawMode.Sprite)
-  
-  end
-  
-  -- Draw selected tile background
-  DrawRect(self.selectionX, Display().Y - 8, 8, 8, 3, DrawMode.Sprite)
+    -- Draw the cursor
+    if(self.blink == true) then
 
-  -- Draw selected tile
-  DrawSprite(self.spriteId, self.selectionX, Display().Y - 8, false, false, DrawMode.Sprite)
+      -- Mask off the background
+      DrawRect(self.cursorX, self.cursorY, 8, 8, BackgroundColor(), DrawMode.Sprite)
+
+      -- Draw the currently selected tile
+      DrawSprite(self.spriteId, self.cursorX, self.cursorY, false, false, DrawMode.Sprite)
+
+    else
+
+      -- Draw the cursor border
+      self.cursorCanvas:DrawPixels(self.cursorX + self.cursorOffset.X, self.cursorY + self.cursorOffset.Y, DrawMode.Sprite)
+    
+    end
+    
+    -- Draw selected tile background
+    DrawRect(self.selectionX, Display().Y - 8, 8, 8, 3, DrawMode.Sprite)
+
+    -- Draw selected tile
+    DrawSprite(self.spriteId, self.selectionX, Display().Y - 8, false, false, DrawMode.Sprite)
+
+  end
+
+end
+
+function EditorScene:SaveState()
+  
+  return "GameScene State"
+
+end
+
+function EditorScene:RestoreState(value)
+  
+  print("Restore state", state)
 
 end
 

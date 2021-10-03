@@ -31,7 +31,7 @@
 // using PixelVision8.Player;
 // using PixelVision8.Workspace;
 using System;
-// using System.Collections.Generic;
+using System.Collections.Generic;
 // using System.IO;
 // using System.Linq;
 // using System.Reflection;
@@ -145,7 +145,7 @@ namespace PixelVision8.Runner
         public SpaceStation8Runner(string rootPath, string[] args = null): base(rootPath, args)
         {
 
-            Console.WriteLine("Runner Loaded");
+            // Console.WriteLine("Runner Loaded");
 
             // ServiceManager = new ServiceManager();
             
@@ -1752,43 +1752,43 @@ namespace PixelVision8.Runner
 //             DisplayError(ErrorCode.LoadError, new Dictionary<string, string> {{"@{path}", lastURI.Path}});
 //         }
 
-//         public virtual void Back(Dictionary<string, string> metaData = null)
-//         {
-//             if (loadHistory.Count > 0)
-//                 try
-//                 {
-//                     // Remvoe the last game that was running from the history
-//                     loadHistory.RemoveAt(loadHistory.Count - 1);
+        public override void Back(Dictionary<string, string> metaData = null)
+        {
+            // if (loadHistory.Count > 0)
+            //     try
+            //     {
+            //         // Remvoe the last game that was running from the history
+            //         loadHistory.RemoveAt(loadHistory.Count - 1);
 
-//                     // Get the previous game
-//                     var lastGameRef = loadHistory.Last();
+            //         // Get the previous game
+            //         var lastGameRef = loadHistory.Last();
 
-//                     // Copy the new meta data over to the last game ref before passing in
-//                     if (metaData != null)
-//                         foreach (var key in metaData.Keys)
-//                             if (lastGameRef.Value.ContainsKey(key))
-//                                 lastGameRef.Value[key] = metaData[key];
-//                             else
-//                                 lastGameRef.Value.Add(key, metaData[key]);
+            //         // Copy the new meta data over to the last game ref before passing in
+            //         if (metaData != null)
+            //             foreach (var key in metaData.Keys)
+            //                 if (lastGameRef.Value.ContainsKey(key))
+            //                     lastGameRef.Value[key] = metaData[key];
+            //                 else
+            //                     lastGameRef.Value.Add(key, metaData[key]);
 
-//                     // Remove that game from history since we are about to load it
-//                     loadHistory.RemoveAt(loadHistory.Count - 1);
+            //         // Remove that game from history since we are about to load it
+            //         loadHistory.RemoveAt(loadHistory.Count - 1);
 
-//                     // Load the last game
-//                     Load(lastGameRef.Key, RunnerMode.Loading, lastGameRef.Value);
+            //         // Load the last game
+            //         Load(lastGameRef.Key, RunnerMode.Loading, lastGameRef.Value);
 
-//                     return;
-//                 }
-//                 catch
-//                 {
-//                     // ignored
-//                 }
+            //         return;
+            //     }
+            //     catch
+            //     {
+            //         // ignored
+            //     }
 
-//             // Make sure all disks are ejected
-//             workspaceServicePlus.EjectAll();
+            // // Make sure all disks are ejected
+            // workspaceServicePlus.EjectAll();
 
-//             AutoLoadDefaultGame();
-//         }
+            // AutoLoadDefaultGame();
+        }
 
 //         public void ShutdownSystem()
 //         {
