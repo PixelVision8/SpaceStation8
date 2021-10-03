@@ -1,0 +1,50 @@
+{
+  "ColorChip": {
+    "pages": 1,
+    "colorsPerPage": 64,
+    "supportedColors": 16,
+    "backgroundColor": 3,
+    "maskColor": "#FF00FF"
+  },
+  "DisplayChip": {
+    "width": 160,
+    "height": 144,
+    "overscanX": 1,
+    "overscanY": 1,
+    "layers": 6
+  },
+  "ControllerChip": {},
+  "FontChip": {},
+  "GameChip": {
+    "name": "Spacestation 8",
+    "description": "",
+    "version": "0.8.0",
+    "ext": ".pv8",
+    "lockSpecs": true,
+    "maxSize": 256,
+    "saveSlots": 8
+  },
+  "MusicChip": {
+    "totalTracks": 2,
+    "notesPerTrack": 127,
+    "totalLoop": 8
+  },
+  "SoundChip": {
+    "totalChannels": 4,
+    "totalSounds": 16
+  },
+  "SpriteChip": {
+    "maxSpriteCount": 0,
+    "unique": false,
+    "spriteWidth": 8,
+    "spriteHeight": 8,
+    "pages": 2,
+    "cps": 4
+  },
+  "TilemapChip": {
+    "columns": 20,
+    "rows": 19,
+    "totalFlags": 16,
+    "autoImport": true
+  }
+}
