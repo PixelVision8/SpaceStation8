@@ -63,7 +63,7 @@ function EditorScene:Reset()
   DrawText("      STR        SEL        A        B", 3, -1, DrawMode.TilemapCache, "medium", 2, -4)
   DrawText("     [   ]      [   ]      [ ]      [ ]", 3, -1, DrawMode.TilemapCache, "medium", 1, -4)
 
-  DrawMetaSprite("tile-picker", 0, Display().Y - 8, false, false, DrawMode.TilemapCache)
+  DrawMetaSprite("tile-picker", 0, 17, false, false, DrawMode.Tile)
 
   -- Rebuild tilemap
   self.tiles = {
