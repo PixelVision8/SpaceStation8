@@ -12,6 +12,8 @@
 function CreateEntity(x, y, spriteName)
 
   local entity = {
+    hitRect = NewRect(x, y, 8, 8),
+    
     x = x,
     y = y,
     flipH = false,
@@ -103,64 +105,65 @@ end
 
 function EntityCollision(rect1, rect2)
 
+  return rect1.Contains(rect2)
   -- print("A",rect1, "B", rect2)
 
-  return (
-    rect1.x < (rect2.x + rect2.w) and
-    (rect1.x + rect1.w) > rect2.x and
-    rect1.y < (rect2.y + rect2.h) and
-    (rect1.h + rect1.y) > rect2.y
-  )
+  -- return (
+  --   rect1.x < (rect2.x + rect2.w) and
+  --   (rect1.x + rect1.w) > rect2.x and
+  --   rect1.y < (rect2.y + rect2.h) and
+  --   (rect1.h + rect1.y) > rect2.y
+  -- )
 end
 
 -- Collectable Star Entity
-Collectable = {}
-Collectable.__index = Collectable
+-- Collectable = {}
+-- Collectable.__index = Collectable
 
-function Collectable:Init(x, y)
+-- function Collectable:Init(x, y)
 
-  local frames = {
-    _G["star1"],
-    _G["star2"],
-    _G["star3"],
-    _G["star4"],
-  }
+--   local frames = {
+--     _G["star1"],
+--     _G["star2"],
+--     _G["star3"],
+--     _G["star4"],
+--   }
 
-  local _collectable = CreateAnimatedEntity(x, y, frames, delay) -- our new object
-  setmetatable(_collectable, Collectable) -- make Account handle lookup
+--   local _collectable = CreateAnimatedEntity(x, y, frames, delay) -- our new object
+--   setmetatable(_collectable, Collectable) -- make Account handle lookup
 
-  return _collectable
+--   return _collectable
 
-end
+-- end
 
-function Collectable:Update(timeDelta)
-  AnimateEntity(self, timeDelta)
-end
+-- function Collectable:Update(timeDelta)
+--   AnimateEntity(self, timeDelta)
+-- end
 
-function Collectable:Draw()
-  DrawEntity(self)
-end
+-- function Collectable:Draw()
+--   DrawEntity(self)
+-- end
 
-function Collectable:Collision(player)
+-- function Collectable:Collision(player)
 
-  print("Collectable")
-  -- Test to see if there is a collision with the supplied rect
-  local collision = EntityCollision(player, self)
+--   print("Collectable")
+--   -- Test to see if there is a collision with the supplied rect
+--   local collision = EntityCollision(player.hitRect, self.hitRect)
 
-  if(collision == true) then
+--   if(collision == true) then
 
-    -- TODO increase score
-    self.alive = false
+--     -- TODO increase score
+--     self.alive = false
 
-    -- TODO need to figure out how to scale the player's physic back after every star collected
-    player.jumpvel = player.jumpvel / 2
-
-
+--     -- TODO need to figure out how to scale the player's physic back after every star collected
+--     player.jumpvel = player.jumpvel / 2
 
 
-  end
 
-end
+
+--   end
+
+-- end
 
 -- Enemy Entity
 Enemy = {}
@@ -212,10 +215,10 @@ function Enemy:Update(timeDelta)
     offset = offset * - 1
   end
 
-  self.x = self.x + offset
+  self.hitRect.X = self.hitRect.X + offset
 
-  local c = math.floor((self.x + ScrollPosition().x) / 8)
-  local r = math.floor((self.y + ScrollPosition().y) / 8) + 1
+  local c = math.floor((self.hitRect.X + ScrollPosition().x) / 8)
+  local r = math.floor((self.hitRect.Y + ScrollPosition().y) / 8) + 1
 
   -- If moving to the right, need to make sure we look ahead of the sprite so add 1 tile to the value
   if(self.flipH == false) then
@@ -232,10 +235,14 @@ end
 
 function Enemy:Draw(offsetX, offsetY)
 
+
+  -- print("Enemy", self.hitRect)
   -- If the entity is dead, don't update
   if(self.alive == false) then
     return
   end
+
+  DrawRect(self.hitRect.X, self.hitRect.Y, self.hitRect.Width, self.hitRect.Height, 3, DrawMode.SpriteBelow)
 
   DrawEntity(self, offsetX, offsetY)
 end
@@ -249,12 +256,12 @@ function Enemy:Collision(player)
 
   -- print("Enemy")
   -- Test to see if there is a collision with the supplied rect
-  local collision = EntityCollision(self, player)
+  local collision = EntityCollision(self.hitRect, player.hitRect)
 
   if(collision == true) then
 
     -- If the player is above the bad guy and falling down, kill the bad guy
-    if(player.y < self.y and math.abs(player.dy) > 0) then
+    if(player.y < self.hitRect.Y and math.abs(player.dy) > 0) then
 
       if(player.dy > 4 or player.justKilled == true) then
 
@@ -288,317 +295,317 @@ function Enemy:Collision(player)
 
 end
 
--- Cloud Star Entity
-Cloud = {}
-Cloud.__index = Cloud
+-- -- Cloud Star Entity
+-- Cloud = {}
+-- Cloud.__index = Cloud
 
-function Cloud:Init(x, y, spriteName, speed)
+-- function Cloud:Init(x, y, spriteName, speed)
 
-  local _cloud = CreateEntity(x, y, spriteName) -- our new object
-  setmetatable(_cloud, Cloud) -- make Account handle lookup
+--   local _cloud = CreateEntity(x, y, spriteName) -- our new object
+--   setmetatable(_cloud, Cloud) -- make Account handle lookup
 
-  _cloud.drawMode = DrawMode.SpriteBelow
-  _cloud.speed = cloudSpeed or 10
+--   _cloud.drawMode = DrawMode.SpriteBelow
+--   _cloud.speed = cloudSpeed or 10
 
-  return _cloud
+--   return _cloud
 
-end
+-- end
 
-function Cloud:Update(timeDelta)
+-- function Cloud:Update(timeDelta)
 
-  timeDelta = timeDelta/1000
+--   timeDelta = timeDelta/1000
 
-  self.x = self.x + (self.speed * timeDelta)
+--   self.hitRect.X = self.hitRect.X + (self.speed * timeDelta)
 
-end
+-- end
 
-function Cloud:Draw(offsetX, offsetY)
-  DrawEntity(self, offsetX, offsetY)
-  -- print("Draw Cloud", offsetX, offsetY)
-end
+-- function Cloud:Draw(offsetX, offsetY)
+--   DrawEntity(self, offsetX, offsetY)
+--   -- print("Draw Cloud", offsetX, offsetY)
+-- end
 
--- Ghost Star Entity
-Ghost = {}
-Ghost.__index = Ghost
+-- -- Ghost Star Entity
+-- Ghost = {}
+-- Ghost.__index = Ghost
 
-function Ghost:Init(x, y, frames, delay, speed)
+-- function Ghost:Init(x, y, frames, delay, speed)
 
-  local _ghost = CreateAnimatedEntity(x, y, frames, delay) -- our new object
-  setmetatable(_ghost, Ghost) -- make Account handle lookup
+--   local _ghost = CreateAnimatedEntity(x, y, frames, delay) -- our new object
+--   setmetatable(_ghost, Ghost) -- make Account handle lookup
 
-  _ghost.speed = speed or 10
+--   _ghost.speed = speed or 10
 
-  return _ghost
+--   return _ghost
 
-end
+-- end
 
-function Ghost:Update(timeDelta)
-  if(self.alive == false) then
-    return
-  end
+-- function Ghost:Update(timeDelta)
+--   if(self.alive == false) then
+--     return
+--   end
 
-  self.y = self.y - (self.speed * timeDelta)
+--   self.hitRect.Y = self.hitRect.Y - (self.speed * timeDelta)
 
-  -- Remove the ghost when it goes too high
-  if(self.y < 0) then
-    self.alive = false
-  end
-  -- if(self.y < self.distance) then
-  --   self.alive = false
-  -- end
+--   -- Remove the ghost when it goes too high
+--   if(self.hitRect.Y < 0) then
+--     self.alive = false
+--   end
+--   -- if(self.hitRect.Y < self.distance) then
+--   --   self.alive = false
+--   -- end
 
-  AnimateEntity(self, timeDelta)
+--   AnimateEntity(self, timeDelta)
 
-end
+-- end
 
-function Ghost:Draw(offsetX, offsetY)
+-- function Ghost:Draw(offsetX, offsetY)
 
-  if(self.alive == false) then
-    return
-  end
+--   if(self.alive == false) then
+--     return
+--   end
 
-  DrawEntity(self, offsetX, offsetY)
+--   DrawEntity(self, offsetX, offsetY)
 
-end
+-- end
 
--- Star Star Entity
-Star = {}
-Star.__index = Star
+-- -- Star Star Entity
+-- Star = {}
+-- Star.__index = Star
 
-function Star:Init(x, y)
+-- function Star:Init(x, y)
 
-  local frames = {
-    star1,
-    star2,
-    star3,
-    star4
-  }
+--   local frames = {
+--     star1,
+--     star2,
+--     star3,
+--     star4
+--   }
 
-  local _star = CreateAnimatedEntity(x, y, frames, .2) -- our new object
-  setmetatable(_star, Star) -- make Account handle lookup
+--   local _star = CreateAnimatedEntity(x, y, frames, .2) -- our new object
+--   setmetatable(_star, Star) -- make Account handle lookup
 
-  _star.speed = speed or 10
-  -- _Star.distance = y - 32
-  _star.lifeDelay = .5
-  _star.lifeTime = 0
+--   _star.speed = speed or 10
+--   -- _Star.distance = y - 32
+--   _star.lifeDelay = .5
+--   _star.lifeTime = 0
 
-  return _star
+--   return _star
 
-end
+-- end
 
-function Star:Update(timeDelta)
+-- function Star:Update(timeDelta)
 
-  if(self.alive == false) then
-    return
-  end
+--   if(self.alive == false) then
+--     return
+--   end
 
-  self.lifeTime = self.lifeTime + timeDelta
+--   self.lifeTime = self.lifeTime + timeDelta
 
-  if(self.lifeTime > self.lifeDelay and self.alive == true) then
+--   if(self.lifeTime > self.lifeDelay and self.alive == true) then
 
-    self.alive = false
+--     self.alive = false
 
-  end
+--   end
 
-  self.y = self.y - (self.speed * timeDelta)
+--   self.hitRect.Y = self.hitRect.Y - (self.speed * timeDelta)
 
-  AnimateEntity(self, timeDelta)
+--   AnimateEntity(self, timeDelta)
 
-end
+-- end
 
-function Star:Draw(offsetX, offsetY)
+-- function Star:Draw(offsetX, offsetY)
 
-  if(self.alive == false) then
-    return
-  end
+--   if(self.alive == false) then
+--     return
+--   end
 
-  DrawEntity(self, offsetX, offsetY)
+--   DrawEntity(self, offsetX, offsetY)
 
-end
+-- end
 
--- Dust Star Entity
-Dust = {}
-Dust.__index = Dust
+-- -- Dust Star Entity
+-- Dust = {}
+-- Dust.__index = Dust
 
-function Dust:Init(x, y)
+-- function Dust:Init(x, y)
 
-  local frames = {
-    MetaSprite("dust-1"),
-    MetaSprite("dust-2"),
-    MetaSprite("dust-3"),
-    MetaSprite("dust-4")
-  }
+--   local frames = {
+--     MetaSprite("dust-1"),
+--     MetaSprite("dust-2"),
+--     MetaSprite("dust-3"),
+--     MetaSprite("dust-4")
+--   }
 
-  local _dust = CreateAnimatedEntity(x, y, frames, .2) -- our new object
-  setmetatable(_dust, Dust) -- make Account handle lookup
+--   local _dust = CreateAnimatedEntity(x, y, frames, .2) -- our new object
+--   setmetatable(_dust, Dust) -- make Account handle lookup
 
-  return _dust
+--   return _dust
 
-end
+-- end
 
-function Dust:Update(timeDelta)
+-- function Dust:Update(timeDelta)
 
-  if(self.alive == false) then
-    return
-  end
+--   if(self.alive == false) then
+--     return
+--   end
 
-  if(self.frame >= #self.frames) then
-    self.alive = false
-  else
-    AnimateEntity(self, timeDelta)
-  end
+--   if(self.frame >= #self.frames) then
+--     self.alive = false
+--   else
+--     AnimateEntity(self, timeDelta)
+--   end
 
-end
+-- end
 
-function Dust:Draw(offsetX, offsetY)
+-- function Dust:Draw(offsetX, offsetY)
 
-  if(self.alive == false) then
-    return
-  end
+--   if(self.alive == false) then
+--     return
+--   end
 
-  DrawEntity(self, offsetX, offsetY)
+--   DrawEntity(self, offsetX, offsetY)
 
-end
+-- end
 
--- Boss Entity
-Boss = {}
-Boss.__index = Boss
+-- -- Boss Entity
+-- Boss = {}
+-- Boss.__index = Boss
 
-function Boss:Init(x, y)
+-- function Boss:Init(x, y)
 
-  local frames = {
-    _G["bossidle1"],
-    _G["bossidle2"],
-    _G["bossidle3"],
-  }
+--   local frames = {
+--     _G["bossidle1"],
+--     _G["bossidle2"],
+--     _G["bossidle3"],
+--   }
 
-  local _boss = CreateAnimatedEntity(x, y, frames, .4) -- our new object
-  setmetatable(_boss, Boss) -- make Account handle lookup
+--   local _boss = CreateAnimatedEntity(x, y, frames, .4) -- our new object
+--   setmetatable(_boss, Boss) -- make Account handle lookup
 
-  _boss.speed = 5
-  _boss.flipH = (math.random(1, 10) > 5)
-  _boss.death = _G["bosshurt"]
-  _boss.deathDelay = 2
-  _boss.value = 4
+--   _boss.speed = 5
+--   _boss.flipH = (math.random(1, 10) > 5)
+--   _boss.death = _G["bosshurt"]
+--   _boss.deathDelay = 2
+--   _boss.value = 4
 
-  return _boss
+--   return _boss
 
-end
+-- end
 
-function Boss:Update(timeDelta)
+-- function Boss:Update(timeDelta)
 
-  if(self.deathPos ~= nil and self.value < 1) then
-    self.x = math.random(self.deathPos.x - 2, self.deathPos.x + 2)
-    -- self.y = math.random(self.deathPos.y, self.deathPos.y - 2)
-  end
-  -- Look to see if entity is dying
-  if(self.dying == true) then
-    self.time = self.time + timeDelta
+--   if(self.deathPos ~= nil and self.value < 1) then
+--     self.hitRect.X = math.random(self.deathPos.x - 2, self.deathPos.x + 2)
+--     -- self.hitRect.Y = math.random(self.deathPos.y, self.deathPos.y - 2)
+--   end
+--   -- Look to see if entity is dying
+--   if(self.dying == true) then
+--     self.time = self.time + timeDelta
 
-    if(self.time > self.deathDelay) then
+--     if(self.time > self.deathDelay) then
 
 
-      if(self.value <= 0) then
-        self.dying = false
-        self.alive = false
+--       if(self.value <= 0) then
+--         self.dying = false
+--         self.alive = false
 
-        stars = stars + 1
+--         stars = stars + 1
 
-      else
-        self.dying = false
-        self.alive = true
-        self.time = 0
-      end
-    end
+--       else
+--         self.dying = false
+--         self.alive = true
+--         self.time = 0
+--       end
+--     end
 
-    return
+--     return
 
-  end
+--   end
 
-  -- If the entity is dead, don't update
-  if(self.alive == false) then
-    return
-  end
+--   -- If the entity is dead, don't update
+--   if(self.alive == false) then
+--     return
+--   end
 
-  local offset = self.speed * timeDelta
+--   local offset = self.speed * timeDelta
 
-  if(self.flipH == true) then
-    offset = offset * - 1
-  end
+--   if(self.flipH == true) then
+--     offset = offset * - 1
+--   end
 
-  self.x = self.x + offset
+--   self.hitRect.X = self.hitRect.X + offset
 
-  local c = math.floor((self.x + ScrollPosition().x) / 8) + 2
-  local r = math.floor((self.y + ScrollPosition().y) / 8) + 1
+--   local c = math.floor((self.hitRect.X + ScrollPosition().x) / 8) + 2
+--   local r = math.floor((self.hitRect.Y + ScrollPosition().y) / 8) + 1
 
-  if(Flag(c, r) == -1) then
-    self.flipH = not self.flipH
-  end
+--   if(Flag(c, r) == -1) then
+--     self.flipH = not self.flipH
+--   end
 
-  AnimateEntity(self, timeDelta)
+--   AnimateEntity(self, timeDelta)
 
-end
+-- end
 
-function Boss:Draw(offsetX, offsetY)
+-- function Boss:Draw(offsetX, offsetY)
 
-  -- If the entity is dead, don't update
-  if(self.alive == false) then
-    return
-  end
+--   -- If the entity is dead, don't update
+--   if(self.alive == false) then
+--     return
+--   end
 
-  DrawEntity(self, offsetX, offsetY)
-end
+--   DrawEntity(self, offsetX, offsetY)
+-- end
 
-function Boss:Collision(player)
+-- function Boss:Collision(player)
 
-  -- Only do collision checking if the entity is alive and not dying
+--   -- Only do collision checking if the entity is alive and not dying
 
-  -- -- Test to see if there is a collision with the supplied rect
-  local collision = EntityCollision(self, player)
+--   -- -- Test to see if there is a collision with the supplied rect
+--   local collision = EntityCollision(self.hitRect, player.hitRect)
 
-  if(collision == true) then
+--   if(collision == true) then
 
-    -- If the player is above the bad guy and falling down, kill the bad guy
-    if(player.y < self.y and math.abs(player.dy) > 0) then
+--     -- If the player is above the bad guy and falling down, kill the bad guy
+--     if(player.y < self.hitRect.Y and math.abs(player.dy) > 0) then
 
-      if(self.alive == false or self.dying == true and player.alive == false) then
-        -- Do nothing
+--       if(self.alive == false or self.dying == true and player.alive == false) then
+--         -- Do nothing
 
-      else
+--       else
 
-        if(player.dy > 4 or player.justKilled == true) then
+--         if(player.dy > 4 or player.justKilled == true) then
 
-          self.dying = true
-          self.time = 0
-          self.frame = 1
-          self.spriteData = self.death
+--           self.dying = true
+--           self.time = 0
+--           self.frame = 1
+--           self.spriteData = self.death
 
-          self.deathPos = {x = self.x, y = self.y}
+--           self.deathPos = {x = self.hitRect.X, y = self.hitRect.Y}
 
-          PlaySound(8, 3)
+--           PlaySound(8, 3)
 
-          if(self.value > 1) then
-            stars = stars + 1
+--           if(self.value > 1) then
+--             stars = stars + 1
 
-          end
+--           end
 
-          self.value = self.value - 1
+--           self.value = self.value - 1
 
-        end
+--         end
 
 
-      end
+--       end
 
-      player.dy = -(player.jumpvel * 1)
+--       player.dy = -(player.jumpvel * 1)
 
-      PlaySound(9, 3)
+--       PlaySound(9, 3)
 
-    else
+--     else
 
-      player.alive = false
+--       player.alive = false
 
-    end
+--     end
 
-  end
+--   end
 
-end
+-- end

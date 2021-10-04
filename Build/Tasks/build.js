@@ -23,7 +23,9 @@ gulp.task('build-clean', function () {
     [process.env.BUILD_PATH], 
     {force: true}
   );
-});
+})
+
+// TODO need to modify the bios to load the game
 
 gulp.task('build-publish', ()=>{
   return gulp.src(process.env.PROJECT, {read: false})

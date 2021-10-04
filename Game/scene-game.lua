@@ -32,14 +32,15 @@ function GameScene:Init()
 
   -- _game.bounds = Display();
 
-  -- _game.microPlatformer = MicroPlatformer:Init()
+  _game.microPlatformer = MicroPlatformer:Init()
+  _game.microPlatformer.jumpSound = 4
+  _game.microPlatformer.hitSound = 5
 
-  -- _game.playerEntity = _game.microPlatformer.player
+  _game.playerEntity = _game.microPlatformer.player
 
   -- _game.playerEntity.spriteData = player
 
-  -- _game.microPlatformer.jumpSound = 4
-  -- _game.microPlatformer.hitSound = 5
+
   -- _game.totalLevelTiles = levelSize.x * levelSize.y
 
   -- _game.exitSign = {x = 50, y = 50}
@@ -52,8 +53,11 @@ end
 function GameScene:RestartLevel()
   -- Reset the player
 
-  self.playerEntity.x = self.playerPos.x
-  self.playerEntity.y = self.playerPos.y
+
+
+
+  self.playerEntity.hitRect.X = self.playerPos.x
+  self.playerEntity.hitRect.Y = self.playerPos.y
   self.playerEntity.dx = 0
   self.playerEntity.dy = 0
   self.playerEntity.alive = true
@@ -145,6 +149,8 @@ function GameScene:Reset()
 
   self.startTimer = -1
 
+  self.microPlatformer.player.sprites = MetaSprite("player").Sprites
+
   -- Create UI
   DrawRect(0, 0, Display().X, 7, 0)
   DrawRect(0, Display().Y - 8, Display().X, 8, 2)
@@ -155,15 +161,16 @@ function GameScene:Reset()
   -- ClearUILayer()
 
   -- Clear old instances
-  -- self.instances = {}
-  -- self.totalInstances = 0
+  self.instances = {}
+  self.totalInstances = 0
   -- self.boss = nil
   -- self.dust = {}
   -- self.stars = {}
   -- self.bossBattle = false
   -- self.ghost = nil
 
-  -- self.playerPos = {x = (width * 8) / 2, y = 0}
+  -- Default player position
+  -- self.playerPos = NewPoint(4 * 8, TilemapSize().Y - 2 * 8)
 
   -- -- Reset global star counter
 
@@ -171,8 +178,173 @@ function GameScene:Reset()
   -- totalStars = 0
 
 
-  -- -- Clear the exit position
-  -- self.exitPos = nil
+  -- Clear the exit position
+  self.exitPos = nil
+
+
+  self.originalSprites = {}
+
+
+
+  local flagMap = {
+    
+  }
+
+  SOLID, FALLING_PLATFORM, DOOR_OPEN, DOOR_LOCKED, ENEMY, SPIKE, SWITCH_OFF, SWITCH_ON, LADDER, PLAYER, KEY, GEM = 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11
+
+  -- Find all the sources for each flag {Sprites, FlagId}
+  local spriteSrc = {
+
+    {MetaSprite("solid").Sprites, SOLID},
+    {MetaSprite("falling-platform").Sprites, FALLING_PLATFORM},
+    {MetaSprite("door-open").Sprites, DOOR_OPEN},
+    {MetaSprite("door-locked").Sprites, DOOR_LOCKED},
+    {MetaSprite("enemy").Sprites, ENEMY},
+    {MetaSprite("spike").Sprites, SPIKE},
+    {MetaSprite("switch-off").Sprites, SWITCH_OFF},
+    {MetaSprite("switch-on").Sprites, SWITCH_ON},
+    {MetaSprite("ladder").Sprites, LADDER},
+    {MetaSprite("player").Sprites, PLAYER},
+    {MetaSprite("key").Sprites, KEY},
+    {MetaSprite("gem").Sprites, GEM}
+    
+  }
+
+  -- Loop through all of the sprite sources
+  for i = 1, #spriteSrc do
+    
+    -- Save the sprites and flag reference
+    local sprites = spriteSrc[i][1]
+    local flag = spriteSrc[i][2]
+    
+    -- Loop through all of the sprites
+    for j = 1, #sprites do
+
+      -- Map the sprite id to the flag
+      flagMap[sprites[j].Id] = flag
+      
+    end
+
+  end
+
+  local total = TilemapSize().X * (TilemapSize().Y - 2)
+
+  local foundPlayer = false
+  local foundDoor = false
+
+  -- Loop through all of the tiles
+  for i = 1, total do
+
+    local pos = CalculatePosition(i-1, TilemapSize().X)
+    
+    local tile = Tile(pos.X, pos.Y)
+
+    local entity = nil
+
+    -- print("tile", pos, tile.SpriteId)
+
+    local spriteId = tile.SpriteId--tilemapData.SpriteIds.Pixels[i]
+
+    -- Save the sprite Id so we can restore it before going back to the editor
+    table.insert(self.originalSprites, spriteId)
+
+    local flag = -1
+
+    -- See if the sprite is mapped to a tile
+    if(flagMap[spriteId] ~= nil) then
+
+      -- Set the flag on the tile
+      flag = flagMap[spriteId]
+
+      -- Convert the x and y to pixels
+      local x = pos.X * 8
+      local y = pos.Y * 8
+
+      -- solid
+      if(flag == SOLID) then
+      
+      -- falling-platform
+      elseif(flag == FALLING_PLATFORM ) then
+        
+      -- door-open or door-locked
+      elseif(flag == DOOR_OPEN or flag == DOOR_LOCKED) then
+        
+        if(foundDoor == false) then
+          foundDoor = true
+
+          -- Change the door to locked
+          spriteId = MetaSprite("door-locked").Sprites[1].Id
+
+          -- Save the door tile to unlock when the key is found
+          self.doorTile = NewPoint(pos.X, pos.Y)
+
+        else
+
+          -- Remove any other door sprite from the map
+          spriteId = -1
+          
+        end
+
+      -- enemy
+      elseif(flag == ENEMY ) then
+      
+        print("Enemy", x, y)
+
+        entity = Enemy:Init(x, y)
+        -- totalStars = totalStars + 1
+
+        -- Tile(pos.X, pos.Y, -1)
+
+        -- Remove any enemy sprites from the map
+        spriteId = -1
+
+      -- spike
+      elseif(flag == SPIKE ) then
+      
+      -- switch-off
+      elseif(flag == SWITCH_OFF ) then
+        
+      -- switch-on
+      elseif(flag == SWITCH_ON ) then
+      
+      -- ladder
+      elseif(flag == LADDER ) then
+        
+      -- player
+      elseif(flag == PLAYER ) then
+        
+        if(foundPlayer == false) then
+          self.playerPos = NewPoint(x, y)
+
+          foundPlayer = true
+        end
+
+        -- Remove any player sprites from the map
+        spriteId = -1
+        flag = -1
+
+      -- key
+      elseif(flag == KEY ) then
+      
+      -- gem
+      elseif(flag == GEM ) then
+
+      end
+      
+    end
+
+    Tile(pos.X, pos.Y, spriteId, 0, flag)
+
+
+    if(entity ~= nil) then
+
+      -- Add the instance to the list to render
+      table.insert(self.instances, entity)
+
+    end
+    
+
+  end
 
   -- -- GoToScreen(level + self.levelOffset)
 
@@ -210,7 +382,20 @@ function GameScene:Reset()
 
   -- end
 
-  -- local total = TilemapSize().X * TilemapSize().Y
+
+  -- {MetaSprite("solid").Sprites, 0},
+  -- {MetaSprite("falling-platform").Sprites, 1},
+  -- {MetaSprite("door-open").Sprites, 3},
+  -- {MetaSprite("door-locked").Sprites, 4},
+  -- {MetaSprite("enemy").Sprites, 5},
+  -- {MetaSprite("spike").Sprites, 6},
+  -- {MetaSprite("switch-off").Sprites, 7},
+  -- {MetaSprite("switch-on").Sprites, 8},
+  -- {MetaSprite("ladder").Sprites, 9},
+  -- {MetaSprite("player").Sprites, 10},
+  -- {MetaSprite("key").Sprites, 11},
+  -- {MetaSprite("gem").Sprites, 12}
+  
 
   -- for i = 1, total do
     
@@ -224,6 +409,7 @@ function GameScene:Reset()
 
   --   local entity = nil
 
+    
   --   if(flag == 2) then -- Door
 
   --     if(self.exitPos == nil) then
@@ -244,7 +430,7 @@ function GameScene:Reset()
   --     DrawMetaSprite("door-close", x, y, false, false, DrawMode.TilemapCache)
   --   --   UpdateTiles(self.exitPos.c, self.exitPos.r, doorlocked.width, doorlocked.spriteIDs)
 
-  --   elseif(flag == 8) then -- Enemy
+    -- elseif(flag == 8) then -- Enemy
   --   --   -- TODO need to know what kind of enemy it is and how many stars its worth
   --     entity = Enemy:Init(x, y)
   --     totalStars = totalStars + 1
@@ -265,7 +451,7 @@ function GameScene:Reset()
 
   --   --   end
 
-  --   elseif(flag == 13) then -- Player
+    -- elseif(flag == 13) then -- Player
 
   --   --   -- Reset the player
   --     self.playerPos.x = x
@@ -281,14 +467,14 @@ function GameScene:Reset()
   --     -- Add the instance to the list to render
   --     table.insert(self.instances, entity)
 
-  --   end
+    -- end
 
-  --   self:RestartLevel()
+    self:RestartLevel()
 
   -- end
 
   -- -- Update the total instance count
-  -- self.totalInstances = #self.instances
+  self.totalInstances = #self.instances
 
   -- -- Draw stars
   -- for i = 1, totalStars do
@@ -333,6 +519,8 @@ function GameScene:Update(timeDelta)
         self.startTimer = 0
         self.startCount = self.startCounts
 
+        self:RestoreTilemap()
+
         -- Switch to play scene
         SwitchScene(EDITOR)
 
@@ -348,10 +536,6 @@ function GameScene:Update(timeDelta)
   end
 
 
-
-  -- timeDelta = timeDelta / 1000
-
-
   -- local starCount = stars
 
   -- local wasAlive = self.playerEntity.alive
@@ -360,8 +544,8 @@ function GameScene:Update(timeDelta)
   -- -- ScrollPosition(self.scrollPos.x, self.scrollPos.y)
 
 
-  -- -- Update the player logic first so we always have the correct player x and y pos
-  -- self.microPlatformer:Update(timeDelta)
+  -- Update the player logic first so we always have the correct player x and y pos
+  self.microPlatformer:Update(timeDelta / 1000)
 
   -- if(self.playerEntity.y > 144) then
   --   self.loop = self.loop + 1
@@ -412,38 +596,40 @@ function GameScene:Update(timeDelta)
 
   -- end
 
-  -- -- Wrap player's x and y position after the platform collision was calculated
-  -- self.playerEntity.x = Repeat(self.playerEntity.x, self.bounds.x)
-  -- self.playerEntity.y = Repeat(self.playerEntity.y, self.bounds.y)
+  -- Wrap player's x and y position after the platform collision was calculated
+  self.playerEntity.hitRect.X = Repeat(self.playerEntity.hitRect.X, self.bounds.x)
+  self.playerEntity.hitRect.Y = Repeat(self.playerEntity.hitRect.Y, self.bounds.y)
 
-  -- -- Loop through all of the entities
-  -- for i = 1, self.totalInstances do
+  -- Loop through all of the entities
+  for i = 1, self.totalInstances do
 
-  --   -- Get the current entity in the list
-  --   local entity = self.instances[i]
+    -- Get the current entity in the list
+    local entity = self.instances[i]
 
-  --   -- Test to see if the entity is still alive
-  --   if(entity.alive == true) then
+    -- print("Update Entity", entity)
 
-  --     -- Test to see if the entity should be updated
-  --     if(entity.Update ~= nil) then
+    -- Test to see if the entity is still alive
+    if(entity.alive == true) then
 
-  --       -- TODO calculate the next animation frame?
-  --       self.instances[i]:Update(timeDelta)
+      -- Test to see if the entity should be updated
+      if(entity.Update ~= nil) then
 
-  --     end
+        -- TODO calculate the next animation frame?
+        self.instances[i]:Update(timeDelta)
 
-  --     -- Test to see if the entity should be updated
-  --     if(entity.Collision ~= nil) then
+      end
 
-  --       -- TODO calculate the next animation frame?
-  --       self.instances[i]:Collision(self.playerEntity)
+      -- Test to see if the entity should be updated
+      if(entity.Collision ~= nil) then
 
-  --     end
+        -- TODO calculate the next animation frame?
+        self.instances[i]:Collision(self.playerEntity)
 
-  --   end
+      end
 
-  -- end
+    end
+
+  end
 
   -- if(self.playerEntity.alive == false) then
 
@@ -661,9 +847,9 @@ function GameScene:Draw()
 
       local entity = self.instances[i]
 
-      if(entity.alive == true) then
-        entity:Draw(self.shakeX, - self.shakeY)
-      end
+      -- if(entity.alive == true) then
+        entity:Draw(0, 0)
+      -- end
 
     end
 
@@ -672,7 +858,7 @@ function GameScene:Draw()
     -- DrawSprites({1, 2, 3, 4}, 0, 0, 4, false, false, DrawMode.Sprite, 0, true)
 
     -- Need to draw the player last since the order of sprite draw calls matters
-    -- self.microPlatformer:Draw()
+    self.microPlatformer:Draw()
 
     -- DrawTilemap(0, 0, 20, 4, 168, 0, DrawMode.UI)
   end
@@ -687,5 +873,19 @@ end
 function GameScene:RestoreState(value)
   
   print("Restore state", state)
+
+end
+
+function GameScene:RestoreTilemap()
+  
+  local total = #self.originalSprites
+  
+  for i = 1, total do
+    
+    local pos = CalculatePosition(i-1, TilemapSize().X)
+
+    Tile(pos.X, pos.Y, self.originalSprites[i], 0, -1)
+
+  end
 
 end
