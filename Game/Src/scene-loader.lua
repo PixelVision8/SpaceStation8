@@ -131,7 +131,7 @@ function LoaderScene:Reset()
   -- Manually flip the climbing sprite so it animates
   MetaSprite("player").Sprites[4].FlipH = true
 
-  NewMetaSprite("enemy", {3, 24, 23})
+  NewMetaSprite("enemy", {3, 22, 23})
 
   -- Border
   NewMetaSprite("top-bar", {38, 38, 38, 38, 38, 38, 38, 38, 38, 38, 38, 38, 38, 38, 38, 38, 38, 38, 38, 38}, 20)

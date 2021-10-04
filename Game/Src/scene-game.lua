@@ -17,15 +17,24 @@ GameScene.__index = GameScene
 
 function GameScene:Init()
 
+  QUIT_TIMER, RESPAWN_TIMER, GAME_OVER_TIMER = 2, 1, 4
+
   local _game = {
     totalInstances = 0,
     bounds = Display(),
     scoreDisplay = 0,
     startTimer = -1,
     startDelay = 1000,
-    startCount = 2,
-    startCounts = 2,
-    score = 0
+    -- startCount = 2,
+    -- startCounts = 2,
+    score = 0,
+    -- time = 0,
+    -- nextLevelDelay = 5,
+    -- nextLevelTime = 0,
+    -- nextLevel = false,
+    unlockDoor = false,
+		maxLives = 3,
+		lives = 3
   }
   setmetatable(_game, GameScene) -- make Account handle lookup
 
@@ -37,15 +46,8 @@ function GameScene:Init()
   _game.microPlatformer.jumpSound = 4
   _game.microPlatformer.hitSound = 5
 
+  -- Get a reference to the player entity
   _game.playerEntity = _game.microPlatformer.player
-
-  -- _game.playerEntity.spriteData = player
-
-
-  -- _game.totalLevelTiles = levelSize.x * levelSize.y
-
-  -- _game.exitSign = {x = 50, y = 50}
-  -- _game.scoreDisplay = 0
 
   return _game
 
@@ -53,10 +55,6 @@ end
 
 function GameScene:RestartLevel()
   -- Reset the player
-
-
-
-
   self.playerEntity.hitRect.X = self.playerPos.x
   self.playerEntity.hitRect.Y = self.playerPos.y
   self.playerEntity.dx = 0
@@ -65,133 +63,36 @@ function GameScene:RestartLevel()
   self.playerEntity.dir = false
   self.playerEntity.jumpvel = 3
   self.playerEntity.isgrounded = false
-
-  self.microPlatformer.grav = 0.2
-  self.loop = 0
-  self.shakeX = 0
-  self.shakeY = 0
-  self.time = 0
-  self.nextLevelDelay = 2
-  self.nextLevel = false
-  self.unlockDoor = false
-
-  if(self.ghost ~= nil) then
-    self.ghost.alive = false
-  end
-
-end
-
-function GameScene:SpawnDust(x, y, loop)
-
-  local dustEntity = nil
-
-  for i = 1, #self.dust do
-
-    if(self.dust[i].alive == false) then
-
-      dustEntity = self.dust[i]
-
-    end
-
-  end
-
-  if(dustEntity == nil) then
-
-    dustEntity = Dust:Init(x, y)
-
-    table.insert(self.instances, dustEntity)
-    self.totalInstances = #self.instances
-
-    table.insert(self.dust, dustEntity)
-
-  end
-
-  dustEntity.x = x
-  dustEntity.y = y
-  dustEntity.alive = true
-  dustEntity.frame = 1
-  dustEntity.loop = loop
-
-end
-
-function GameScene:SpawnStar(x, y)
-
-  local starEntity = nil
-
-  for i = 1, #self.stars do
-
-    if(self.stars[i].alive == false) then
-
-      starEntity = self.stars[i]
-
-    end
-
-  end
-
-  if(starEntity == nil) then
-
-    starEntity = Star:Init(x, y)
-
-    table.insert(self.instances, starEntity)
-    self.totalInstances = #self.instances
-
-    table.insert(self.stars, starEntity)
-
-  end
-
-  starEntity.x = x
-  starEntity.y = y
-  starEntity.alive = true
-  starEntity.lifeTime = 0
-
+  
 end
 
 function GameScene:Reset()
 
+  -- Reset everything to default values
+  self.score = 0
+  -- self.nextLevel = false
+  self.unlockDoor = false
+  self.nextLevelDelay = 500
+
+  self.lives = self.maxLives
   self.startTimer = -1
 
-  self.microPlatformer.player.sprites = MetaSprite("player").Sprites
+  -- Set the player sprites
+  self.playerEntity.sprites = MetaSprite("player").Sprites
+
+  -- Reset the key flag
+  self.hasKey = false
 
   -- Create UI
   -- DrawRect(0, 0, Display().X, 7, 0)
   DrawRect(0, Display().Y - 8, Display().X, 8, 2)
 
-  
-  
-
-  DrawText("SPACE STATION 8", 3, -1, DrawMode.TilemapCache, "medium", 3, -4)
-
-  -- ClearUILayer()
-
   -- Clear old instances
   self.instances = {}
   self.totalInstances = 0
-  -- self.boss = nil
-  -- self.dust = {}
-  -- self.stars = {}
-  -- self.bossBattle = false
-  -- self.ghost = nil
-
-  -- Default player position
-  -- self.playerPos = NewPoint(4 * 8, TilemapSize().Y - 2 * 8)
-
-  -- -- Reset global star counter
-
-  -- stars = 0
-  -- totalStars = 0
-
-
-  -- Clear the exit position
-  self.exitPos = nil
-
-
   self.originalSprites = {}
 
-
-
-  local flagMap = {
-    
-  }
+  local flagMap = {}
 
   SOLID, PLATFORM, DOOR_OPEN, DOOR_LOCKED, ENEMY, SPIKE, SWITCH_OFF, SWITCH_ON, LADDER, PLAYER, KEY, GEM = 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11
 
@@ -234,6 +135,7 @@ function GameScene:Reset()
 
   local foundPlayer = false
   local foundDoor = false
+  local foundKey = false
 
   -- Loop through all of the tiles
   for i = 1, total do
@@ -273,10 +175,14 @@ function GameScene:Reset()
       elseif(flag == DOOR_OPEN or flag == DOOR_LOCKED) then
         
         if(foundDoor == false) then
+          
           foundDoor = true
 
           -- Change the door to locked
           spriteId = MetaSprite("door-locked").Sprites[1].Id
+          
+          -- Lock the door
+          flag = DOOR_LOCKED
 
           -- Save the door tile to unlock when the key is found
           self.doorTile = NewPoint(pos.X, pos.Y)
@@ -320,6 +226,8 @@ function GameScene:Reset()
           self.playerPos = NewPoint(x, y)
 
           foundPlayer = true
+
+          self.invalidateLives = true
         end
 
         -- Remove any player sprites from the map
@@ -328,7 +236,11 @@ function GameScene:Reset()
 
       -- key
       elseif(flag == KEY ) then
-      
+
+        self.invalidateKey = true
+
+        foundKey = true
+
       -- gem
       elseif(flag == GEM ) then
 
@@ -349,188 +261,54 @@ function GameScene:Reset()
 
   end
 
-  -- print("Test", MetaSprite("bottom-hud").Sprites[2].ColorOffset)
-  
-  -- MetaSprite("bottom-hud").Sprites[2].ColorOffset = 2
 
+  if(foundPlayer == false or foundDoor == false or foundKey == false) then
+
+    -- TODO need to pass a message to the scene it was missing things
+    SwitchScene(EDITOR)
+
+  end
+  
   DrawMetaSprite("top-bar", 0, 0, false, false, DrawMode.TilemapCache)
   DrawMetaSprite("bottom-hud", 0, Display().Y - 8, false, false, DrawMode.TilemapCache)
   DrawMetaSprite("ui-o2-border", 8 * 8, Display().Y - 8, false, false, DrawMode.TilemapCache)
   DrawMetaSprite("ui-o2-border", (8+4) * 8, Display().Y - 8, true, false, DrawMode.TilemapCache)
+  
+  -- for i = 1, self.maxLives do
+  --   DrawMetaSprite("ui-life", i * 8, Display().Y - 9, true, false, DrawMode.TilemapCache, 1)
+  -- end
 
-
-  local maxLives = 3
-  local lives = 2
-  local hasKey = true
-
-  for i = 1, maxLives do
-    DrawMetaSprite("ui-life", i * 8, Display().Y - 9, true, false, DrawMode.TilemapCache, lives < maxLives and 3 or 1)
-  end
-
-  DrawMetaSprite("ui-key", 40, Display().Y - 8, true, false, DrawMode.TilemapCache, hasKey and 2 or 0)
+  -- DrawMetaSprite("ui-key", 40, Display().Y - 8, false, false, DrawMode.TilemapCache, 0)
 
   DrawText("SCORE", 14*8, Display().Y - 9, DrawMode.TilemapCache, "medium", 2, -4)
 
+  DrawText("SPACE STATION 8", 3, -1, DrawMode.TilemapCache, "medium", 3, -4)
 
-  
-  -- print("Test 2", MetaSprite("bottom-hud").Sprites[2].ColorOffset)
-  -- -- GoToScreen(level + self.levelOffset)
-
-  -- -- TODO for debugging
-  -- level = 1
-
-  -- -- LoadTilemap("tilemap-" .. level)
-  
-
-  -- -- Get the current scroll position
-  -- local pos = ScrollPosition()
-
-  -- -- Create a new vector for the scroll position
-  -- self.scrollPos = NewPoint(pos.x, pos.y)
-
-  -- -- Draw UI
-  -- DrawMetaSprite("sky", 0, 0, false, false, DrawMode.TilemapCache)
-
-  -- DrawMetaSprite("border-left", 0, 0, false, false, DrawMode.TilemapCache)
-  -- DrawMetaSprite("border-top", 16, 0, false, false, DrawMode.TilemapCache)
-  -- DrawMetaSprite("border-left", 160-16, 0, true, false, DrawMode.TilemapCache)
-
-  -- -- Create two clouds
-  -- for i = 1, 2 do
-
-  --   local cloud = Cloud:Init(
-  --     math.random(0, Display().X),
-  --     math.random(7, Display().Y - 6),
-  --     i < 2 and "cloud-small" or "cloud-large",
-  --     math.random(5, 10)
-  --   )
-
-  --   -- Add the instance to the list to render
-  --   table.insert(self.instances, cloud)
-
-  -- end
-
-
-  -- {MetaSprite("solid").Sprites, 0},
-  -- {MetaSprite("falling-platform").Sprites, 1},
-  -- {MetaSprite("door-open").Sprites, 3},
-  -- {MetaSprite("door-locked").Sprites, 4},
-  -- {MetaSprite("enemy").Sprites, 5},
-  -- {MetaSprite("spike").Sprites, 6},
-  -- {MetaSprite("switch-off").Sprites, 7},
-  -- {MetaSprite("switch-on").Sprites, 8},
-  -- {MetaSprite("ladder").Sprites, 9},
-  -- {MetaSprite("player").Sprites, 10},
-  -- {MetaSprite("key").Sprites, 11},
-  -- {MetaSprite("gem").Sprites, 12}
-  
-
-  -- for i = 1, total do
-    
-  --   local pos = CalculatePosition(i-1, TilemapSize().X)
-
-  --   local flag = Flag(pos.X, pos.Y)
-
-  --   -- Convert the x and y to pixels
-  --   local x = pos.X * 8
-  --   local y = pos.Y * 8
-
-  --   local entity = nil
-
-    
-  --   if(flag == 2) then -- Door
-
-  --     if(self.exitPos == nil) then
-
-  --       -- Save the first tile position
-  --       self.exitPos = {
-  --         c = realC,
-  --         r = realR,
-  --         x = x,
-  --         y = y,
-  --         w = 16,
-  --         h = 16
-  --       }
-
-  --     end
-
-  --     -- Make sure that the door tiles are displaying a locked door
-  --     DrawMetaSprite("door-close", x, y, false, false, DrawMode.TilemapCache)
-  --   --   UpdateTiles(self.exitPos.c, self.exitPos.r, doorlocked.width, doorlocked.spriteIDs)
-
-    -- elseif(flag == 8) then -- Enemy
-  --   --   -- TODO need to know what kind of enemy it is and how many stars its worth
-  --     entity = Enemy:Init(x, y)
-  --     totalStars = totalStars + 1
-
-  --     Tile(pos.X, pos.Y, -1)
-
-  --   elseif(flag == 9) then
-
-  --   --   if(self.bossBattle ~= true) then
-
-  --   --     -- TODO need to know what kind of enemy it is and how many stars its worth
-  --   --     entity = Boss:Init(x, y)
-
-  --   --     self.bossBattle = true
-  --   --     self.boss = entity
-
-  --   --     totalStars = totalStars + 4
-
-  --   --   end
-
-    -- elseif(flag == 13) then -- Player
-
-  --   --   -- Reset the player
-  --     self.playerPos.x = x
-  --     self.playerPos.y = y
-      
-
-  --   --   print("FOUND PLAYER")
-
-  --   end
-
-  --   if(entity ~= nil) then
-
-  --     -- Add the instance to the list to render
-  --     table.insert(self.instances, entity)
-
-    -- end
-
-    self:RestartLevel()
-
-  -- end
-
-  -- -- Update the total instance count
+  -- Update the total instance count
   self.totalInstances = #self.instances
 
-  -- -- Draw stars
-  -- for i = 1, totalStars do
 
-  --   self:DrawStar("star-off", i)
-
-  -- end
-
-  -- DrawText(LeftPad(tostring(score), 6, "0"), 32, 1, DrawMode.Tile, "default")
-
-end
-
-function GameScene:DrawStar(name, index)
-
-  local star = MetaSprite(name)
-
-  local tmpC = 2 + ((index - 1) * star.Width)
-  
-  DrawMetaSprite(star, (tmpC) * 8, 3, false, false, DrawMode.TilemapCache)
+  self:RestartLevel()
 
 end
 
 function GameScene:Update(timeDelta)
 
+  if(Button(Buttons.Select, InputState.Down) and self.startTimer == -1) then
 
-  if(Button(Buttons.Select, InputState.Down)) then
+    self.startTimer = 0
+    self.startCount = QUIT_TIMER
+    
+  elseif(Button(Buttons.Select, InputState.Released)) then
 
+    -- Reset
+    self.startTimer = -1
+    -- self.startCount = QUIT_TIMER
 
+  end
+
+  if(self.startTimer ~= -1) then
+    
     self.startTimer = self.startTimer + timeDelta
 
     if(self.startTimer > self.startDelay) then
@@ -543,30 +321,26 @@ function GameScene:Update(timeDelta)
 
       else
 
-        -- Reset
-        self.startTimer = 0
-        self.startCount = self.startCounts
+        if(Button(Buttons.Select, InputState.Down) == true or self.lives < 0) then
+        
+          self:ReturnToEditor()
+        
+        else
+          
+          self:RestartLevel()
+          self.startTimer = -1
 
-        self:RestoreTilemap()
-
-        -- Switch to play scene
-        SwitchScene(EDITOR)
+        end
 
       end
 
     end
-    
-  elseif(Button(Buttons.Select, InputState.Released)) then
-
-    -- Reset
-    self.startTimer = -1
-    self.startCount = self.startCounts
   end
 
 
   -- local starCount = stars
 
-  -- local wasAlive = self.playerEntity.alive
+  local wasAlive = self.playerEntity.alive
 
   -- -- Reset scroll position
   -- -- ScrollPosition(self.scrollPos.x, self.scrollPos.y)
@@ -574,6 +348,38 @@ function GameScene:Update(timeDelta)
 
   -- Update the player logic first so we always have the correct player x and y pos
   self.microPlatformer:Update(timeDelta / 1000)
+
+
+  -- Check for collisions
+  if(self.microPlatformer.currentFlag == KEY) then
+
+		self.hasKey = true
+		
+		Tile(self.microPlatformer.currentFlagPos.X, self.microPlatformer.currentFlagPos.Y, -1)
+
+    self.invalidateKey = true
+    
+    -- DrawRect(self.doorTile.X * 8, self.doorTile.Y * 8, 8, 8, 3)
+    Tile(self.doorTile.X, self.doorTile.Y, MetaSprite("door-open").Sprites[1].Id)
+
+	elseif(self.currentFlag == GEM) then
+
+    self.score = score + 100
+
+    print("PICK UP GEM")
+
+		Tile(self.microPlatformer.currentFlagPos.X, self.microPlatformer.currentFlagPos.Y, -1)
+
+	elseif(self.currentFlag == DOOR_OPEN) then
+		
+		print("LOCKED DOOR_OPEN")
+
+		self.atDoor = true
+
+    -- TODO exit level
+
+  end
+
 
   -- if(self.playerEntity.y > 144) then
   --   self.loop = self.loop + 1
@@ -666,67 +472,65 @@ function GameScene:Update(timeDelta)
   end
 
 
-  -- if(self.playerEntity.alive == false) then
+  if(self.playerEntity.alive == false) then
+    
+    if(wasAlive == true) then
 
-  --   if(wasAlive == true) then
+      -- Reset the timer
+      -- self.time = 0
 
-  --     local frames = {
-  --       ghost1,
-  --       ghost2
-  --     }
+      self.startTimer = 0
+      -- self.startCount = self.startCounts
 
-  --     if(self.ghost == nil) then
-  --       self.ghost = Ghost:Init(0, 0, frames, .4, 10)
-  --       table.insert(self.instances, self.ghost)
-  --       self.totalInstances = #self.instances
-  --     end
+      self.lives = self.lives - 1
+      self.invalidateLives = true
 
-  --     self.ghost.x = self.playerEntity.x - 8
-  --     self.ghost.y = self.playerEntity.y - 8
-  --     self.ghost.alive = true
+      if(self.lives >= 0) then
+        self.startCount = RESPAWN_TIMER
+      else
+        self.startCount = GAME_OVER_TIMER
+      end
 
-  --     self.time = 0
-  --     self.loop = 0
+    else
+      
+      -- self.time = self.time + timeDelta
 
-  --     local tombPixelData = Sprite(MetaSprite("tomb").Sprites[1].Id)
+      -- DrawMetaSprite("top-bar", 0, 0, false, false, DrawMode.TilemapCache)
 
-  --     DrawPixels(tombPixelData, self.playerEntity.x + self.scrollPos.x, self.playerEntity.y + self.scrollPos.y, 8, 8, false, false, DrawMode.TilemapCache)
+      -- if(self.lives <= 0) then
+      --     DrawText("            GAME OVER " .. self.nextLevelTime, 0, -1, DrawMode.TilemapCache, "medium", 3, -4)
+      -- else
+      --     DrawText("            RESPAWN " .. self.nextLevelTime, 0, -1, DrawMode.TilemapCache, "medium", 3, -4)
+      -- end
 
-  --     PlaySound(10, 3)
+      -- if(self.time > self.startDelay) then
 
-  --     -- Reduce the score before trying to restart the level
-  --     score = score - 100
+      --   self.nextLevelTime = self.nextLevelTime + 1
 
-  --     if(score <= 0) then
-  --       score = 0
+      --   if(self.nextLevelTime > self.nextLevelDelay) then
 
-  --       self.playerEntity.alive = false
-  --       return
+      --     self.time = 0
 
-  --     end
+      --     if(self.lives <= 0) then
 
-  --   elseif(self.ghost ~= nil and self.ghost.alive) then
+      --       self:ReturnToEditor()
 
-  --     self.time = self.time + timeDelta
+      --       return
 
-  --     if(self.time > self.nextLevelDelay) then
+      --     else
 
-  --       self.ghost.alive = false
+      --       self.lives = self.lives - 1
+      --       self:RestartLevel()
 
-  --       if(score <= 0) then
+      --     end
 
-  --         SwitchScene(4)
+      --   end
 
-  --         return
+      -- end
 
-  --       else
-  --         self:RestartLevel()
-  --       end
-  --     end
+    end
 
-  --   end
-
-  -- end
+  end
 
   -- if(stars == totalStars and self.unlockDoor == false) then
 
@@ -812,42 +616,42 @@ function GameScene:Update(timeDelta)
 
   --     else
 
-  --       SwitchScene(2)
+        -- self:ReturnToEditor()
   --       return
 
   --     end
-  --   end
+    -- end
 
   -- elseif(score > 0 and self.playerEntity.alive == true) then
 
   --   self.time = self.time + timeDelta
 
-  --   if(self.time > 1) then
-  --     self.time = 0
-  --     score = score - levelBonus
-  --   end
+  --   -- if(self.time > 1) then
+  --   --   self.time = 0
+  --   --   score = score - levelBonus
+  --   -- end
 
   -- end
 
   -- Update score
-  -- if(self.scoreDisplay ~= self.score) then
+  if(self.scoreDisplay ~= self.score) then
 
-  --   local diff = math.floor((self.score - self.scoreDisplay) / 4)
+    local diff = math.floor((self.score - self.scoreDisplay) / 4)
 
-  --   -- print(score, self.scoreDisplay, diff)
+    -- print(score, self.scoreDisplay, diff)
 
-  --   self.scoreDisplay = self.scoreDisplay + diff
+    self.scoreDisplay = self.scoreDisplay + diff
 
-  --   if(self.scoreDisplay < 0) then
-  --     self.scoreDisplay = 0
-  --   end
+    if(self.scoreDisplay < 0) then
+      self.scoreDisplay = 0
+    end
 
     -- Clear below
     DrawText(LeftPad(tostring(self.scoreDisplay), 5, "0"), Display().X - (6 * 4), Display().Y - 9, DrawMode.TilemapCache, "medium", 3, -4)
 
     -- DrawText(LeftPad(tostring(self.scoreDisplay), 6, "0"), 15 * 8, Display().Y - 9, DrawMode.TilemapCache, "medium" - 4)
 
-  -- end
+  end
 
   -- if(self.bossBattle == true and self.boss ~= nil) then
 
@@ -876,8 +680,27 @@ function GameScene:Draw()
 
   if(self.startTimer > -1) then
     
-    DrawRect(0, 0, Display().X, 7, 0, DrawMode.Sprite)
-    DrawText("            EXITING GAME IN " .. self.startCount + 1, 3, -1, DrawMode.SpriteAbove, "medium", 3, -4)
+    local message = "IN " .. self.startCount + 1
+
+    if(Button(Buttons.Select, InputState.Down) == true) then
+
+      message = "EXITING GAME " .. message
+
+    elseif(self.lives < 0) then
+
+      message = "GAME OVER " .. message
+
+    else
+
+      message = "RESTARTING " .. message
+
+    end
+
+    DrawMetaSprite("top-bar", 0, 0, false, false, DrawMode.TilemapCache)
+
+    local offset = (Display().X - (#message * 4)) * .5
+    
+    DrawText(message, offset, -1, DrawMode.SpriteAbove, "medium", 3, -4)
 
   else
 
@@ -885,10 +708,25 @@ function GameScene:Draw()
 
       local entity = self.instances[i]
 
-      -- if(entity.alive == true) then
+      if(entity.alive == true) then
         entity:Draw(0, 0)
-      -- end
+      end
 
+    end
+
+    if(self.invalidateLives == true) then
+      
+      for i = 1, self.maxLives do
+        DrawMetaSprite("ui-life", i * 8, Display().Y - 9, true, false, DrawMode.TilemapCache, self.lives < i and 1 or 3)
+      end
+
+      self.invalidateLives = false
+
+    end
+    
+    if(self.invalidateKey == true) then
+      DrawMetaSprite("ui-key", 40, Display().Y - 8, false, false, DrawMode.TilemapCache, self.hasKey == true and 2 or 1)
+      self.invalidateKey = false
     end
 
     -- local signSpriteData = in1
@@ -900,6 +738,7 @@ function GameScene:Draw()
 
     -- DrawTilemap(0, 0, 20, 4, 168, 0, DrawMode.UI)
   end
+
 end
 
 function GameScene:SaveState()
@@ -925,5 +764,12 @@ function GameScene:RestoreTilemap()
     Tile(pos.X, pos.Y, self.originalSprites[i], 0, -1)
 
   end
+
+end
+
+function GameScene:ReturnToEditor()
+  
+  self:RestoreTilemap()
+  SwitchScene(EDITOR)
 
 end

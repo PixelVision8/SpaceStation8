@@ -16,7 +16,7 @@ LoadScript("scene-over")
 LoadScript("scene-game")
 
 -- Modes
-LOADER, SPLASH, EDITOR, RUN = 1, 2, 3, 4
+LOADER, SPLASH, EDITOR, RUN, OVER = 1, 2, 3, 4, 2 -- TODO need to create an OVER screen
 
 -- Create a variable to store the active scene
 local activeScene = nil

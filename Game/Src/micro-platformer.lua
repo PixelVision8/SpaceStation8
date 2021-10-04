@@ -30,9 +30,11 @@ MicroPlatformer.__index = MicroPlatformer
 function MicroPlatformer:Init()
 
 	-- Create a new object for the instance and register it
-	local _microPlatformer = {}
-	setmetatable(_microPlatformer, MicroPlatformer)
+	local _microPlatformer = {
+		grav = 0.2
+	}
 
+	setmetatable(_microPlatformer, MicroPlatformer)
 
 	--player information
 	_microPlatformer.player = 
@@ -47,10 +49,11 @@ function MicroPlatformer:Init()
 		jumpvel = 3.0,
 		time = 0,
 		delay = .1,
-		grav = 0.2,
 		jumpSound = -1,
 		hitSound = -1,
-		spriteOffset = 0
+		spriteOffset = 0,
+		alive = true,
+		hasKey = false
 	}
 	
 	return _microPlatformer
@@ -81,7 +84,9 @@ function MicroPlatformer:Update(timeDelta)
 	-- DrawRect(top.X, top.Y, 1, 1, 3, DrawMode.SpriteAbove)
 	
 	-- Keep track of all the collision areas around the player
-	local currentFlag = Flag(math.floor(center.X/8), math.floor(center.Y/8))
+	self.currentFlagPos = NewPoint(math.floor(center.X/8), math.floor(center.Y/8))
+	self.currentFlag = Flag(self.currentFlagPos.X, self.currentFlagPos.Y)
+
 	-- DrawRect(math.floor(center.X/8) * 8, math.floor(center.Y/8) * 8, 8, 8, 9, DrawMode.SpriteBelow)
 
 
@@ -101,21 +106,8 @@ function MicroPlatformer:Update(timeDelta)
 		end
 	end
 	
-	if(currentFlag == KEY) then
-
-		Tile(math.floor(center.X/8), math.floor(center.Y/8), -1)
-
-
-	elseif(currentFlag == GEM) then
-		
-		Tile(math.floor(center.X/8), math.floor(center.Y/8), -1)
-
-	elseif(currentFlag == DOOR_OPEN) then
-	
-	
-	elseif(currentFlag == DOOR_OPEN) then
-
-	elseif(currentFlag == LADDER) then
+	-- Handle moving on the ladder
+	if(self.currentFlag == LADDER) then
 
 		grav = 0
 
@@ -192,6 +184,7 @@ function MicroPlatformer:Update(timeDelta)
 
 			print("Kill Player")
 
+			self.player.alive = false
 
 		elseif (bottomFlag == SOLID or bottomFlag == PLATFORM) then
 			
@@ -262,7 +255,7 @@ function MicroPlatformer:Update(timeDelta)
 	self.spriteDir = self.player.dir
 
 	-- Climbing
-	if(currentFlag == LADDER) then
+	if(self.currentFlag == LADDER) then
 		
 		self.player.spriteID = PLAYER_CLIMB 
 		

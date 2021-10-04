@@ -26,11 +26,6 @@ end
 
 function OverScene:Reset()
 
-  -- Clear tile area where score is
-  -- UpdateTiles(32, 1, 6, { - 1, - 1, - 1, - 1, - 1, - 1})
-
-  -- RebuildTilemap()
-
   self.scoreDisplay = 0
 
   -- Read best score from save file
