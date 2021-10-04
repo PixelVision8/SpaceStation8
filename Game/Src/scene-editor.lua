@@ -242,6 +242,10 @@ function EditorScene:Update(timeDelta)
         self.startTimer = 0
         self.startCount = self.startCounts
 
+    
+        -- Save the tilemap
+
+        SaveLevel()
 
         -- TODO clear data if we are going back to load screen and go to the loader instead of the splash screen
          -- Switch to play scene

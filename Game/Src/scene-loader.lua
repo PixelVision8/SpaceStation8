@@ -18,9 +18,11 @@ function LoaderScene:Init()
     flickerTime = 0,
     flickerDelay = 400,
     flickerVisible = true,
-    -- Load the image using the bg as the mask
-    defaultMapImage = ReadImage(NewWorkspacePath("/Game/template.png"), Color(2)) -- TODO need to figure out how to pass an image into this
+    imagePath = NewWorkspacePath("/Game/map.spacestation8.png"),
   }
+
+  -- Load the image using the bg as the mask
+  _loader.defaultMapImage = ReadImage(_loader.imagePath, Color(2))
 
   -- Remap the colors of the template image when first loaded
   _loader.defaultMapImage.RemapColors({MaskColor(),Color(0), Color(1), Color(2), Color(3)})
@@ -139,7 +141,8 @@ function LoaderScene:Reset()
   
 
   -- Tile Editor
-  NewMetaSprite("tile-picker", {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19}, 20)
+  NewMetaSprite("tile-picker", {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19,
+                                20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39}, 20)
 
   NewMetaSprite("bottom-hud", {39, 39, 39, 39, 39, 39, 39, 35, 37, 37, 37, 37, 37, 39, 39, 39, 39, 39, 39, 39}, 20)
   
@@ -172,6 +175,10 @@ function LoaderScene:Reset()
   -- if(SessionID() == ReadSaveData("sessionID", "")) then
   --   nextSceneId = tonumber(ReadSaveData("lastSceneId", tostring(SPLASH)))
   -- end
+
+  -- self.imagePath = UniqueFilePath(NewWorkspacePath())
+
+  SaveLevel(NewWorkspacePath("/User/Levels/" .. self.imagePath.EntityName))
 
   SwitchScene(SPLASH)
 

@@ -20,8 +20,6 @@ function SplashScene:Init()
     flickerVisible = true,
     selectLock = false,
     startLock = false
-    -- Load the image using the bg as the mask
-    -- mapImage = ReadImage(NewWorkspacePath("/Game/template.png"), Color(2))
   }
 
   setmetatable(_splash, SplashScene) -- make Account handle lookup
@@ -31,6 +29,10 @@ function SplashScene:Init()
 end
 
 function SplashScene:Reset()
+
+  print("Create new image")
+
+
 
   self.selectLock = Button(Buttons.Select, InputState.Down)
   self.startLock = Button(Buttons.Start, InputState.Down)

@@ -214,3 +214,62 @@ function OnLoadImage(value)
   -- DrawPixels(value.GetPixels(), 0, 0, value.Width, value.Height, false, false, DrawMode.TilemapCache)
 
 end
+
+local lastImagePath = "/User/Levels/map.spacestation8.png"
+
+function SaveLevel(newPath)
+
+  if(newPath) then
+    
+    lastImagePath = UniqueFilePath(newPath)
+    
+  end
+
+  local mapImage = NewCanvas(TilemapSize().X * 8, TilemapSize().Y * 8)
+
+  
+  -- Copy the tilemap to the canvas
+  local total = TilemapSize().X * TilemapSize().Y
+
+  for i = 1, total do
+
+    local pos = CalculatePosition(i-1, TilemapSize().X)
+    local sprite = Tile(pos.X, pos.Y).SpriteId
+
+    mapImage.DrawSprite(sprite, pos.X * 8, pos.Y * 8)
+
+  end
+
+  -- Draw the UI on top of the image
+  mapImage.DrawMetaSprite("top-bar", 0, 0)
+
+  local message = "PLAY AT SPACESTATION8.DOWNLOAD"
+  mapImage.DrawText(message, (Display().X - (#message * 4)) * .5, -1, "medium", 3, -4)
+
+  mapImage.DrawMetaSprite("tile-picker", 0, (TilemapSize().Y - 2) * 8)
+
+  local tmpImage = NewImage(mapImage.Width, mapImage.Height, mapImage.GetPixels(), {MaskColor(),Color(0), Color(1), Color(2), Color(3)})
+
+
+
+
+  -- local mapImage = NewCanvas(TilemapSize().X * 8, TilemapSize().Y * 8)
+
+  --       local total = TilemapSize().X * TilemapSize().Y
+
+  --       for i = 1, total do
+
+  --         local pos = CalculatePosition(i-1, TilemapSize().X)
+  --         local sprite = Tile(pos.X, pos.Y).SpriteId
+
+  --         mapImage.DrawSprite(sprite, pos.X * 8, pos.Y * 8)
+
+  --       end
+        
+  --       local tmpImage = NewImage(mapImage.Width, mapImage.Height, mapImage.GetPixels(), {MaskColor(),Color(0), Color(1), Color(2), Color(3)})
+      
+  --       SaveImage(scenes[LOADER].imagePath, tmpImage)
+
+  SaveImage(lastImagePath, tmpImage)
+
+end
