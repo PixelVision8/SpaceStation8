@@ -65,24 +65,51 @@ function EditorScene:Reset()
 
   DrawMetaSprite("tile-picker", 0, Display().Y - 8, false, false, DrawMode.TilemapCache)
 
+  -- Rebuild tilemap
+  self.tiles = {
+    {00, 00}, -- Empty
+    {01, 20}, -- Door
+    {02, 21}, -- Player
+    {03, 22}, -- Enemy
+    {04, 04}, -- Platform Left
+    {05, 28}, -- Platform Center
+    {06, 06}, -- Platform Right
+    {07, 07}, -- Platform
+    {08, 28}, -- Platform Edge (Should remove?)
+    {09, 29}, -- Spike
+    {10, 30}, -- Arrow Up
+    {11, 31}, -- Arrow Right
+    {12, 32}, -- Wall
+    {13, 33}, -- Switch
+    {14, 14}, -- Ladder
+    {15, 15}, -- Key
+    {16, 16}, -- GEM
+    {17, 17}, -- Pillar Bottom
+    {18, 18}, -- Pillar Middle
+    {19, 19}, -- Pillar Top
+  }
+
 end
 
 function EditorScene:Update(timeDelta)
 
+  -- Reset select
+  if(Button(Buttons.Select, InputState.Released)) then
+    self.selectLock = false
+  end
+
+  -- Reset start
+  if(Button(Buttons.Start, InputState.Released)) then
+    self.startLock = false
+  end
+
+  -- Increment input time
   self.inputTime = self.inputTime + timeDelta
 
-  -- if(Button(Buttons.Select, InputState.Down) and Button(Buttons.Start, InputState.Down)) then
-    
-
-  --   -- TODO need to clean this up so it warns the player and resets the map
-  --   SwitchScene(SPLASH)
-
-  --   return
-
-  -- end
-
+  -- Check for input delay
   if(self.inputTime > self.inputDelay) then
     
+    -- Reset input time
     self.inputTime = 0
 
     if(Button(Buttons.Up)) then
@@ -132,14 +159,24 @@ function EditorScene:Update(timeDelta)
       -- Reset the alt tile
       self.altTile = false
 
-    elseif(Button(Buttons.Select, InputState.Released)) then
+    elseif(Button(Buttons.A)) then
 
-      self.selectLock = false
+      local value = self.spriteId > 1 and self.spriteId or -1
+
+      if (Tile(self.cursorPos.X  + self.cursorBounds.X, self.cursorPos.Y  + self.cursorBounds.Y).SpriteId ~= value) then
+        
+        DrawRect(self.cursorX, self.cursorY, 8, 8, BackgroundColor())
+        Tile(self.cursorPos.X + self.cursorBounds.X, self.cursorPos.Y + self.cursorBounds.Y, value)
+
+        self:ResetBlink()
+
+      end
 
     end
 
-
   end
+
+  
 
   -- Always check for the button release independent of the timer
   if(Button(Buttons.B, InputState.Released)) then
@@ -165,18 +202,26 @@ function EditorScene:Update(timeDelta)
   self.tileId = self.currentTile + 1
   self.selectionX = (self.tileId - 1) * 8
 
-  if(self.altTile) then
-    self.tileId = self.tileId + 20
-  end
 
-  self.spriteId = MetaSprite("tile-picker").Sprites[self.tileId].Id
+  self.spriteId = self.tiles[self.currentTile + 1][self.altTile == false and 1 or 2]
 
-  if(Button(Buttons.A, InputState.Released)) then
+  -- self.tileId = tiles[1]
+  
+  -- self.selectionX = (self.tileId - 1) * 8
 
-    DrawRect(self.cursorX, self.cursorY, 8, 8, BackgroundColor())
-    Tile(self.cursorPos.X  + self.cursorBounds.X, self.cursorPos.Y  + self.cursorBounds.Y, self.spriteId)
+  -- if(self.altTile and #tiles > 1) then
+  --   self.tileId = tiles[2]
+  -- end
 
-  end
+  -- self.spriteId = self.tileId
+
+  -- if(self.altTile) then
+  --   self.tileId = self.tileId + 20
+  -- end
+
+  -- self.spriteId = MetaSprite("tile-picker").Sprites[self.tileId].Id
+
+  
 
   if((Button(Buttons.Start, InputState.Down) and self.startLock == false) ) then
 
@@ -200,7 +245,7 @@ function EditorScene:Update(timeDelta)
 
         -- TODO clear data if we are going back to load screen and go to the loader instead of the splash screen
          -- Switch to play scene
-         SwitchScene(Button(Buttons.Select) and SPLASH or PLAYER)
+         SwitchScene(Button(Buttons.Select) and LOADER or RUN)
 
       end
 

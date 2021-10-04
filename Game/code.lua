@@ -15,13 +15,8 @@ LoadScript("scene-editor")
 LoadScript("scene-over")
 LoadScript("scene-game")
 
-LOADER, SPLASH, EDITOR, PLAYER = 1, 2, 3, 4
-
--- Calculate the level size
-levelSize = {x = 20, y = 18}
-
--- Calculate the level size width
-width = TilemapSize().x / levelSize.x
+-- Modes
+LOADER, SPLASH, EDITOR, RUN = 1, 2, 3, 4
 
 -- Create a variable to store the active scene
 local activeScene = nil
@@ -32,6 +27,11 @@ local activeSceneId = 1
 -- use this method to configure background color, ScreenBufferChip and draw a text box.
 function Init()
 
+  MaskColor(Color(2))
+
+  -- Change the background
+  BackgroundColor(2)
+  
   -- Create a table for each of the scenes that make up the game
   scenes = {
     LoaderScene:Init(),
@@ -196,4 +196,21 @@ function dump(o)
   else
     return tostring(o)
   end
+end
+
+function OnLoadImage(value)
+
+  if(activeSceneId == SPLASH or activeSceneId == LOADER) then
+    -- print("OnLoadImage Called", value.Width, value.Height)
+
+    value.RemapColors({MaskColor(),Color(0), Color(1), Color(2), Color(3)})
+
+    scenes[LOADER].defaultMapImage = value
+
+    SwitchScene(LOADER)
+
+  end
+
+  -- DrawPixels(value.GetPixels(), 0, 0, value.Width, value.Height, false, false, DrawMode.TilemapCache)
+
 end

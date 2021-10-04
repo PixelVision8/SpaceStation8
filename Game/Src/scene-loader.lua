@@ -19,8 +19,11 @@ function LoaderScene:Init()
     flickerDelay = 400,
     flickerVisible = true,
     -- Load the image using the bg as the mask
-    mapImage = ReadImage(NewWorkspacePath("/Game/template.png"), Color(2)) -- TODO need to figure out how to pass an image into this
+    defaultMapImage = ReadImage(NewWorkspacePath("/Game/template.png"), Color(2)) -- TODO need to figure out how to pass an image into this
   }
+
+  -- Remap the colors of the template image when first loaded
+  _loader.defaultMapImage.RemapColors({MaskColor(),Color(0), Color(1), Color(2), Color(3)})
 
   setmetatable(_loader, LoaderScene) -- make Account handle lookup
 
@@ -30,34 +33,45 @@ end
 
 function LoaderScene:Reset()
 
+  DrawRect(0, 0, Display().X, Display().Y, BackgroundColor())
+
   -- Remap the colors to the system colors
-  self.mapImage.RemapColors({MaskColor(),Color(0), Color(1), Color(2), Color(3)})
+  
 
   -- Calculate the columns and rows
-  local cols = math.floor(self.mapImage.Width/8)
-  local rows = math.floor(self.mapImage.Height/8)
-
-  -- Change the background
-  BackgroundColor(2)
+  local cols = math.floor(self.defaultMapImage.Width/8)
+  local rows = math.floor(self.defaultMapImage.Height/8)
 
   -- Make sure the image is the correct size
-  if(cols < 20 or rows < 19) then
+  if(cols < 20 or rows < 17) then
 
+    
     DrawText("There was an error loading the image.", 4, 0, DrawMode.TilemapCache, "medium", 3, -4)
-    DrawText("Please make sure it's 160 x 144 pixels.", 4, 8, DrawMode.TilemapCache, "medium", 3, -4)
+    DrawText("Please make sure it's 160 x 136 pixels.", 4, 8, DrawMode.TilemapCache, "medium", 3, -4)
 
     return
 
   end
 
+  -- Create a new map image
+  local mapImage = NewCanvas(Display().X, Display().Y + 8)
+
+  -- Restore default sprites
+  local defaultSprites = ReadImage(NewWorkspacePath("/Game/sprites.png"), Color(2))
+  defaultSprites.RemapColors({MaskColor(),Color(0), Color(1), Color(2), Color(3)})
+  mapImage.SetPixels(0, mapImage.Height - 16, defaultSprites.Width, defaultSprites.Height, defaultSprites.GetPixels())
+
+  -- Copy over the tilemap image
+  mapImage.SetPixels(0, 0, self.defaultMapImage.Width, self.defaultMapImage.Height, self.defaultMapImage.GetPixels())
+
   -- Calculate how far from the bottom we want to sample from
   local spriteOffset = 16
 
   -- Create a rect for the sample area
-  local sampleSize = NewRect(0,self.mapImage.Height - spriteOffset, self.mapImage.Width, spriteOffset)
+  local sampleSize = NewRect(0,mapImage.Height - spriteOffset, mapImage.Width, spriteOffset)
 
   -- Create a new image with just the footer tiles
-  local tiles = NewImage(sampleSize.Width, sampleSize.Height, self.mapImage.GetPixels(sampleSize.X, sampleSize.Y, sampleSize.Width, sampleSize.Height))
+  local tiles = NewImage(sampleSize.Width, sampleSize.Height, mapImage.GetPixels(sampleSize.X, sampleSize.Y, sampleSize.Width, sampleSize.Height))
   
   -- Capture 2 columns of sprites
   local totalSprites = cols * 2
@@ -92,7 +106,7 @@ function LoaderScene:Reset()
   for i = 2, totalTiles do
     
     local pos = CalculatePosition(i-1, cols)
-    local pixels = self.mapImage.GetPixels(pos.X * 8, pos.Y * 8, 8, 8)
+    local pixels = mapImage.GetPixels(pos.X * 8, pos.Y * 8, 8, 8)
 
     local spriteId = FindSprite(pixels)
 
@@ -103,36 +117,63 @@ function LoaderScene:Reset()
   end
 
   -- Build out all of the meta sprites the game needs to run
-  NewMetaSprite("player", {2, 20, 26, 27, 22})
+  NewMetaSprite("player", {
+    2, 27, -- Idle (1)
+    24, 2, -- Walking (2)
+    25, 25,-- Jumping/Climbing (3)
+    26, -- Falling (5)
+    21 -- Alt sprite (used when drawing in the tilemap)
+  })
+
+  -- Create constants for player animations
+  PLAYER_IDLE, PLAYER_WALK, PLAYER_JUMP, PLAYER_CLIMB, PLAYER_FALL = 1, 2, 3, 3, 4
+
+  -- Manually flip the climbing sprite so it animates
+  MetaSprite("player").Sprites[4].FlipH = true
+
   NewMetaSprite("enemy", {3, 24, 23})
-  NewMetaSprite("tile-picker", 
-  {
-    0,  1,  2, 3, 4, 5, 6, 7,  8,  9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19,
-    0, 21, 22, 23, 4, 25, 6, 7, 28, 29, 30, 31, 32, 13, 14, 15, 16, 17, 18, 19,
-  }, 20)
-  NewMetaSprite("solid", {4, 5, 6, 8, 17, 18, 19, 25, 28})
-  NewMetaSprite("falling-platform", {7})
+
+  -- Border
+  NewMetaSprite("top-bar", {38, 38, 38, 38, 38, 38, 38, 38, 38, 38, 38, 38, 38, 38, 38, 38, 38, 38, 38, 38}, 20)
+  NewMetaSprite("bottom-bar", {39, 39, 39, 39, 39, 39, 39, 39, 39, 39, 39, 39, 39, 39, 39, 39, 39, 39, 39, 39}, 20)
+  
+
+  -- Tile Editor
+  NewMetaSprite("tile-picker", {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19}, 20)
+
+  NewMetaSprite("bottom-hud", {39, 39, 39, 39, 39, 39, 39, 35, 37, 37, 37, 37, 37, 39, 39, 39, 39, 39, 39, 39}, 20)
+  
+  -- O2 Bar
+  -- NewMetaSprite("ui-o2-bar", {35, 37, 37, 37, 37, 37}, 6)
+  NewMetaSprite("ui-o2-border", {36}, 1)
+
+
+  -- Collectables
+  NewMetaSprite("ui-key", {15})
+  NewMetaSprite("ui-life", {24})
+
+  -- Flag Tiles
+  NewMetaSprite("solid", {4, 5, 6, 8, 17, 18, 19, 28, 34})
+  NewMetaSprite("platform", {7})
   NewMetaSprite("door-open", {1})
-  NewMetaSprite("door-locked", {21})
-  NewMetaSprite("spike", {11, 31})
+  NewMetaSprite("door-locked", {20})
+  NewMetaSprite("spike", {9, 29})
   NewMetaSprite("switch-off", {13})
   NewMetaSprite("switch-on", {33})
   NewMetaSprite("ladder", {14})
   NewMetaSprite("key", {15})
   NewMetaSprite("gem", {16})
-  NewMetaSprite("ui-o2", {33, 34, 34, 34, 35}, 5)
-  NewMetaSprite("ui-key", {38, 39})
-  NewMetaSprite("ui-life", {36, 37})
+
 
 
   -- TODO ned  to restore selections correctly
-  local nextSceneId = SPLASH
+  -- local nextSceneId = 
   
-  if(SessionID() == ReadSaveData("sessionID", "")) then
-    nextSceneId = tonumber(ReadSaveData("lastSceneId", tostring(SPLASH)))
-  end
+  -- if(SessionID() == ReadSaveData("sessionID", "")) then
+  --   nextSceneId = tonumber(ReadSaveData("lastSceneId", tostring(SPLASH)))
+  -- end
 
-  SwitchScene(nextSceneId)
+  SwitchScene(SPLASH)
 
 end
 

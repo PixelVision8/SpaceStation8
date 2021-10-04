@@ -24,7 +24,8 @@ function GameScene:Init()
     startTimer = -1,
     startDelay = 1000,
     startCount = 2,
-    startCounts = 2
+    startCounts = 2,
+    score = 0
   }
   setmetatable(_game, GameScene) -- make Account handle lookup
 
@@ -152,8 +153,10 @@ function GameScene:Reset()
   self.microPlatformer.player.sprites = MetaSprite("player").Sprites
 
   -- Create UI
-  DrawRect(0, 0, Display().X, 7, 0)
+  -- DrawRect(0, 0, Display().X, 7, 0)
   DrawRect(0, Display().Y - 8, Display().X, 8, 2)
+
+  
   
 
   DrawText("SPACE STATION 8", 3, -1, DrawMode.TilemapCache, "medium", 3, -4)
@@ -190,13 +193,13 @@ function GameScene:Reset()
     
   }
 
-  SOLID, FALLING_PLATFORM, DOOR_OPEN, DOOR_LOCKED, ENEMY, SPIKE, SWITCH_OFF, SWITCH_ON, LADDER, PLAYER, KEY, GEM = 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11
+  SOLID, PLATFORM, DOOR_OPEN, DOOR_LOCKED, ENEMY, SPIKE, SWITCH_OFF, SWITCH_ON, LADDER, PLAYER, KEY, GEM = 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11
 
   -- Find all the sources for each flag {Sprites, FlagId}
   local spriteSrc = {
 
     {MetaSprite("solid").Sprites, SOLID},
-    {MetaSprite("falling-platform").Sprites, FALLING_PLATFORM},
+    {MetaSprite("platform").Sprites, PLATFORM},
     {MetaSprite("door-open").Sprites, DOOR_OPEN},
     {MetaSprite("door-locked").Sprites, DOOR_LOCKED},
     {MetaSprite("enemy").Sprites, ENEMY},
@@ -264,7 +267,7 @@ function GameScene:Reset()
       if(flag == SOLID) then
       
       -- falling-platform
-      elseif(flag == FALLING_PLATFORM ) then
+      elseif(flag == PLATFORM ) then
         
       -- door-open or door-locked
       elseif(flag == DOOR_OPEN or flag == DOOR_LOCKED) then
@@ -346,6 +349,31 @@ function GameScene:Reset()
 
   end
 
+  -- print("Test", MetaSprite("bottom-hud").Sprites[2].ColorOffset)
+  
+  -- MetaSprite("bottom-hud").Sprites[2].ColorOffset = 2
+
+  DrawMetaSprite("top-bar", 0, 0, false, false, DrawMode.TilemapCache)
+  DrawMetaSprite("bottom-hud", 0, Display().Y - 8, false, false, DrawMode.TilemapCache)
+  DrawMetaSprite("ui-o2-border", 8 * 8, Display().Y - 8, false, false, DrawMode.TilemapCache)
+  DrawMetaSprite("ui-o2-border", (8+4) * 8, Display().Y - 8, true, false, DrawMode.TilemapCache)
+
+
+  local maxLives = 3
+  local lives = 2
+  local hasKey = true
+
+  for i = 1, maxLives do
+    DrawMetaSprite("ui-life", i * 8, Display().Y - 9, true, false, DrawMode.TilemapCache, lives < maxLives and 3 or 1)
+  end
+
+  DrawMetaSprite("ui-key", 40, Display().Y - 8, true, false, DrawMode.TilemapCache, hasKey and 2 or 0)
+
+  DrawText("SCORE", 14*8, Display().Y - 9, DrawMode.TilemapCache, "medium", 2, -4)
+
+
+  
+  -- print("Test 2", MetaSprite("bottom-hud").Sprites[2].ColorOffset)
   -- -- GoToScreen(level + self.levelOffset)
 
   -- -- TODO for debugging
@@ -597,8 +625,14 @@ function GameScene:Update(timeDelta)
   -- end
 
   -- Wrap player's x and y position after the platform collision was calculated
-  self.playerEntity.hitRect.X = Repeat(self.playerEntity.hitRect.X, self.bounds.x)
-  self.playerEntity.hitRect.Y = Repeat(self.playerEntity.hitRect.Y, self.bounds.y)
+
+  -- if(self.playerEntity.hitRect.X < -2) then
+  --   self.playerEntity.hitRect.X = self.bounds.x - 2
+  -- elseif(self.playerEntity.hitRect.X > self.bounds.x - 4) then
+  --   self.playerEntity.hitRect.X = - 2
+  -- end
+  self.playerEntity.hitRect.X = Repeat(self.playerEntity.hitRect.X, self.bounds.x-4)
+  -- self.playerEntity.hitRect.Y = Repeat(self.playerEntity.hitRect.Y, self.bounds.y)
 
   -- Loop through all of the entities
   for i = 1, self.totalInstances do
@@ -630,6 +664,7 @@ function GameScene:Update(timeDelta)
     end
 
   end
+
 
   -- if(self.playerEntity.alive == false) then
 
@@ -794,10 +829,10 @@ function GameScene:Update(timeDelta)
 
   -- end
 
-  -- -- Update score
-  -- if(self.scoreDisplay ~= score) then
+  -- Update score
+  -- if(self.scoreDisplay ~= self.score) then
 
-  --   local diff = math.floor((score - self.scoreDisplay) / 4)
+  --   local diff = math.floor((self.score - self.scoreDisplay) / 4)
 
   --   -- print(score, self.scoreDisplay, diff)
 
@@ -807,7 +842,10 @@ function GameScene:Update(timeDelta)
   --     self.scoreDisplay = 0
   --   end
 
-  --   DrawText(LeftPad(tostring(self.scoreDisplay), 6, "0"), 32, 1, DrawMode.Tile, "default")
+    -- Clear below
+    DrawText(LeftPad(tostring(self.scoreDisplay), 5, "0"), Display().X - (6 * 4), Display().Y - 9, DrawMode.TilemapCache, "medium", 3, -4)
+
+    -- DrawText(LeftPad(tostring(self.scoreDisplay), 6, "0"), 15 * 8, Display().Y - 9, DrawMode.TilemapCache, "medium" - 4)
 
   -- end
 
