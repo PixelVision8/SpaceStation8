@@ -19,20 +19,18 @@ function GameScene:Init()
 
   QUIT_TIMER, RESPAWN_TIMER, GAME_OVER_TIMER, WIN_GAME = 2, 1, 4, 4
 
+  STEP_POINT, KEY_POINT, GEM_POINT, EXIT_POINT = 10, 50, 100, 500
+
   local _game = {
     totalInstances = 0,
     bounds = Display(),
     scoreDisplay = 0,
     startTimer = -1,
     startDelay = 1000,
-    -- startCount = 2,
-    -- startCounts = 2,
     score = 0,
-    -- time = 0,
-    -- nextLevelDelay = 5,
-    -- nextLevelTime = 0,
-    -- nextLevel = false,
-    -- unlockDoor = false,
+    maxAir = 100,
+    air = 100,
+    airLoss = 4,
 		maxLives = 3,
 		lives = 3,
     atDoor = false
@@ -54,35 +52,25 @@ function GameScene:Init()
 
 end
 
-function GameScene:RestartLevel()
-  -- Reset the player
-  self.playerEntity.hitRect.X = self.playerPos.x
-  self.playerEntity.hitRect.Y = self.playerPos.y
-  self.playerEntity.dx = 0
-  self.playerEntity.dy = 0
-  self.playerEntity.alive = true
-  self.playerEntity.dir = false
-  self.playerEntity.jumpvel = 2.5
-  self.playerEntity.isgrounded = false
+function GameScene:Reset()
   
+  self.lives = self.maxLives
+
+  self:RestartLevel()
 end
 
-function GameScene:Reset()
-
+function GameScene:RestartLevel()
+  
   -- Reset everything to default values
-  self.score = 0
-  -- self.nextLevel = false
-  -- self.unlockDoor = false
-  -- self.nextLevelDelay = 500
   self.atDoor = false
-  self.lives = self.maxLives
   self.startTimer = -1
-
-  -- Set the player sprites
-  self.playerEntity.sprites = MetaSprite("player").Sprites
+  self.air = self.maxAir + 10
+  self.score = 0
+  self.scoreDisplay = -1
 
   -- Reset the key flag
   self.hasKey = false
+  
 
   -- Create UI
   -- DrawRect(0, 0, Display().X, 7, 0)
@@ -198,7 +186,7 @@ function GameScene:Reset()
       -- enemy
       elseif(flag == ENEMY ) then
       
-        print("Enemy", x, y)
+        -- print("Enemy", x, y)
 
         entity = Enemy:Init(x, y)
         -- totalStars = totalStars + 1
@@ -245,7 +233,6 @@ function GameScene:Reset()
       -- gem
       elseif(flag == GEM ) then
 
-          print("Found Gem")
       end
       
     end
@@ -278,17 +265,37 @@ function GameScene:Reset()
 
   DrawText("SCORE", 14*8, Display().Y - 9, DrawMode.TilemapCache, "medium", 2, -4)
 
-  DrawText("SPACE STATION 8", 3, -1, DrawMode.TilemapCache, "medium", 3, -4)
+
+  local message = string.sub(lastImagePath.EntityName, 0, - #" .spacestation8.png"):upper()
+  local maxChars = 10
+  if(#message > maxChars) then
+    message = string.sub(message, 0, maxChars) .. "..."
+  end
+
+  DrawText("PLAYING " .. message, 8, -1, DrawMode.TilemapCache, "medium", 3, -4)
+  DrawText("SPACE STATION 8", Display().X - 68, -1, DrawMode.TilemapCache, "medium", 3, -4)
 
   -- Update the total instance count
   self.totalInstances = #self.instances
 
 
-  self:RestartLevel()
+  -- Reset the player
+  self.playerEntity.hitRect.X = self.playerPos.x
+  self.playerEntity.hitRect.Y = self.playerPos.y
+  self.playerEntity.dx = 0
+  self.playerEntity.dy = 0
+  self.playerEntity.alive = true
+  self.playerEntity.dir = false
+  self.playerEntity.jumpvel = 2.5
+  self.playerEntity.isgrounded = false
+  -- Set the player sprites
+  self.playerEntity.sprites = MetaSprite("player").Sprites
 
 end
 
 function GameScene:Update(timeDelta)
+
+  local td = timeDelta/1000
 
   if(Button(Buttons.Select, InputState.Down) and self.startTimer == -1) then
 
@@ -323,6 +330,7 @@ function GameScene:Update(timeDelta)
         
         else
           
+          self:RestoreTilemap()
           self:RestartLevel()
           self.startTimer = -1
 
@@ -339,7 +347,7 @@ function GameScene:Update(timeDelta)
   local wasAlive = self.playerEntity.alive
 
   -- Update the player logic first so we always have the correct player x and y pos
-  self.microPlatformer:Update(timeDelta / 1000)
+  self.microPlatformer:Update(td)
 
 
   -- Check for collisions
@@ -347,29 +355,33 @@ function GameScene:Update(timeDelta)
 
 		self.hasKey = true
 		
-		Tile(self.microPlatformer.currentFlagPos.X, self.microPlatformer.currentFlagPos.Y, -1)
+		Tile(self.microPlatformer.currentFlagPos.X, self.microPlatformer.currentFlagPos.Y, -1, 0, -1)
 
     self.invalidateKey = true
     
     -- DrawRect(self.doorTile.X * 8, self.doorTile.Y * 8, 8, 8, 3)
     Tile(self.doorTile.X, self.doorTile.Y, MetaSprite("door-open").Sprites[1].Id, 0, DOOR_OPEN)
 
+    self:IncreaseScore(KEY_POINT)
+
+    -- print("KEY COLLISION")
+
 	elseif(self.microPlatformer.currentFlag == GEM) then
 
-    self.score = score + 100
+    self:IncreaseScore(GEM_POINT)
 
-		Tile(self.microPlatformer.currentFlagPos.X, self.microPlatformer.currentFlagPos.Y, -1)
+		Tile(self.microPlatformer.currentFlagPos.X, self.microPlatformer.currentFlagPos.Y, -1, 0, -1)
 
 	elseif(self.microPlatformer.currentFlag == DOOR_OPEN and self.atDoor == false) then
 		
-		print("LOCKED DOOR_OPEN")
-
 		self.atDoor = true
 
     -- TODO exit level
 
     self.startTimer = 0
     self.startCount = WIN_GAME
+
+    self:IncreaseScore(EXIT_POINT)
 
   end
 
@@ -407,13 +419,19 @@ function GameScene:Update(timeDelta)
 
   end
 
+  if(self.atDoor == false and self.playerEntity.alive == true) then
+
+    self.air = self.air - (self.airLoss * td)
+
+    if(self.air <= 0) then
+      self.playerEntity.alive = false
+    end
+
+  end
 
   if(self.playerEntity.alive == false) then
     
     if(wasAlive == true) then
-
-      -- Reset the timer
-      -- self.time = 0
 
       self.startTimer = 0
       -- self.startCount = self.startCounts
@@ -427,30 +445,43 @@ function GameScene:Update(timeDelta)
         self.startCount = GAME_OVER_TIMER
       end
 
-     
     end
+ 
+  elseif(self.atDoor == false) then
 
+    self:IncreaseScore(STEP_POINT * td)
+  
   end
+
+  local percent = (self.air/ self.maxAir)
+
+  if(percent > 1) then
+    percent = 1
+  elseif(percent < 0) then
+    percent = 0
+  end
+
+  DrawRect((8 * 8) + 2, Display().Y - 6, 36 * percent, 3, 2, DrawMode.Sprite)
 
   -- Update score
   if(self.scoreDisplay ~= self.score) then
 
     local diff = math.floor((self.score - self.scoreDisplay) / 4)
 
-    -- print(score, self.scoreDisplay, diff)
+    if(diff < 5) then
 
-    self.scoreDisplay = self.scoreDisplay + diff
+      self.scoreDisplay = self.score
 
-    if(self.scoreDisplay < 0) then
-      self.scoreDisplay = 0
+    else
+
+      self.scoreDisplay = self.scoreDisplay + diff
+
     end
 
-    -- Clear below
-    DrawText(LeftPad(tostring(self.scoreDisplay), 5, "0"), Display().X - (6 * 4), Display().Y - 9, DrawMode.TilemapCache, "medium", 3, -4)
-
-    -- DrawText(LeftPad(tostring(self.scoreDisplay), 6, "0"), 15 * 8, Display().Y - 9, DrawMode.TilemapCache, "medium" - 4)
-
   end
+
+  DrawText(LeftPad(tostring(Clamp(self.scoreDisplay, 0, 9999)), 4, "0"), Display().X - (6 * 4), Display().Y - 9, DrawMode.SpriteAbove, "medium", 3, -4)
+
 
 end
 
@@ -520,19 +551,20 @@ function GameScene:Draw()
 
   end
 
-  if(Button(Buttons.Start)) then
+  -- TODO for debugging flags
+  -- if(Button(Buttons.Start)) then
 
-    local total = 20 * 18
+  --   local total = 20 * 18
 
-    for i = 1, total do
+  --   for i = 1, total do
       
-      local pos = CalculatePosition(i-1, 20)
+  --     local pos = CalculatePosition(i-1, 20)
 
-      DrawText(Flag(pos.X, pos.Y), pos.X * 8, pos.Y * 8, DrawMode.Sprite, "medium", 3, -5)
+  --     DrawText(Flag(pos.X, pos.Y), pos.X * 8, pos.Y * 8, DrawMode.Sprite, "medium", 3, -5)
 
-    end
+  --   end
 
-  end
+  -- end
 
 end
 
@@ -544,12 +576,12 @@ end
 
 function GameScene:RestoreState(value)
   
-  print("Restore state", state)
+  -- print("Restore state", state)
 
 end
 
 function GameScene:RestoreTilemap()
-  
+
   local total = #self.originalSprites
   
   for i = 1, total do
@@ -566,5 +598,11 @@ function GameScene:ReturnToEditor()
   
   self:RestoreTilemap()
   SwitchScene(EDITOR)
+
+end
+
+function GameScene:IncreaseScore(value)
+
+  self.score = self.score + value
 
 end

@@ -215,7 +215,7 @@ function OnLoadImage(value)
 
 end
 
-local lastImagePath = "/User/Levels/map.spacestation8.png"
+lastImagePath = NewWorkspacePath("/User/Levels/map.spacestation8.png")
 
 function SaveLevel(newPath)
 

@@ -30,7 +30,7 @@ end
 
 function SplashScene:Reset()
 
-  print("Create new image")
+  -- print("Create new image")
 
 
 
@@ -77,7 +77,7 @@ function SplashScene:Update(timeDelta)
       SwitchScene(EDITOR)
 
       -- Change song
-      PlayPatterns({1}, true)
+      -- PlayPatterns({1}, true)
 
     end
 
@@ -114,6 +114,6 @@ end
 
 function SplashScene:RestoreState(value)
   
-  print("Restore state", state)
+  -- print("Restore state", state)
 
 end

@@ -29,7 +29,7 @@ function CreateEntity(x, y, spriteName)
     entity.h = entity.spriteData.Height--math.floor(#entity.spriteData.spriteIDs / entity.spriteData.width)
   end
 
-  print("Entity", spriteName, dump(entity))
+  -- print("Entity", spriteName, dump(entity))
 
   return entity
 

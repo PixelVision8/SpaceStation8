@@ -182,7 +182,7 @@ function MicroPlatformer:Update(timeDelta)
 		--look for a solid tile
 		if (bottomFlag == SPIKE  or self.player.hitRect.Y > (Display().Y - 16)) then
 
-			print("Kill Player")
+			-- print("Kill Player")
 
 			self.player.alive = false
 
@@ -211,7 +211,7 @@ function MicroPlatformer:Update(timeDelta)
 			self.player.dy = 0
 		
 			--allow jumping again
-			self.player.isgrounded = true
+			-- self.player.isgrounded = true
 		
 
 		-- Make sure the player doesn't accumulate speed if in a falling loop
@@ -255,7 +255,7 @@ function MicroPlatformer:Update(timeDelta)
 	self.spriteDir = self.player.dir
 
 	-- Climbing
-	if(self.currentFlag == LADDER) then
+	if(self.currentFlag == LADDER and self.player.isgrounded == false) then
 		
 		self.player.spriteID = PLAYER_CLIMB 
 		

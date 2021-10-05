@@ -63,7 +63,7 @@ function EditorScene:Reset()
   DrawText("      STR        SEL        A        B", 3, -1, DrawMode.TilemapCache, "medium", 2, -4)
   DrawText("     [   ]      [   ]      [ ]      [ ]", 3, -1, DrawMode.TilemapCache, "medium", 1, -4)
 
-  DrawMetaSprite("tile-picker", 0, 17, false, false, DrawMode.Tile)
+  
 
   -- Rebuild tilemap
   self.tiles = {
@@ -88,6 +88,9 @@ function EditorScene:Reset()
     {18, 18}, -- Pillar Middle
     {19, 19}, -- Pillar Top
   }
+
+  -- print("Rebuild picker")
+  DrawMetaSprite("tile-picker", 0, 17, false, false, DrawMode.Tile)
 
 end
 
@@ -161,7 +164,7 @@ function EditorScene:Update(timeDelta)
 
     elseif(Button(Buttons.A)) then
 
-      local value = self.spriteId > 1 and self.spriteId or -1
+      local value = self.spriteId > 0 and self.spriteId or -1
 
       if (Tile(self.cursorPos.X  + self.cursorBounds.X, self.cursorPos.Y  + self.cursorBounds.Y).SpriteId ~= value) then
         
@@ -316,7 +319,7 @@ end
 
 function EditorScene:RestoreState(value)
   
-  print("Restore state", state)
+  -- print("Restore state", state)
 
 end
 

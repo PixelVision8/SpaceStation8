@@ -5,7 +5,7 @@
     "songs":[
         {
             "songName":"GameOver",
-            "speedInBPM":217,
+            "speedInBPM":120,
             "tracks":
             [
                 {
@@ -20,7 +20,7 @@
         },
         {
             "songName":"Bouncy",
-            "speedInBPM":265,
+            "speedInBPM":120,
             "tracks":
             [
                 {
@@ -35,7 +35,7 @@
         },
         {
             "songName":"Ditty",
-            "speedInBPM":213,
+            "speedInBPM":120,
             "tracks":
             [
                 {
@@ -50,7 +50,7 @@
         },
         {
             "songName":"Splash",
-            "speedInBPM":262,
+            "speedInBPM":120,
             "tracks":
             [
                 {

@@ -218,6 +218,6 @@ end
 
 function LoaderScene:RestoreState(value)
   
-  print("Restore state", state)
+  -- print("Restore state", state)
 
 end
