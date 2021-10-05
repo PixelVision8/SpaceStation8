@@ -135,6 +135,8 @@ function LoaderScene:Reset()
 
   NewMetaSprite("enemy", {3, 22, 23})
 
+  NewMetaSprite("enemy-move", {3, 23})
+
   -- Border
   NewMetaSprite("top-bar", {38, 38, 38, 38, 38, 38, 38, 38, 38, 38, 38, 38, 38, 38, 38, 38, 38, 38, 38, 38}, 20)
   NewMetaSprite("bottom-bar", {39, 39, 39, 39, 39, 39, 39, 39, 39, 39, 39, 39, 39, 39, 39, 39, 39, 39, 39, 39}, 20)
@@ -154,9 +156,10 @@ function LoaderScene:Reset()
   -- Collectables
   NewMetaSprite("ui-key", {15})
   NewMetaSprite("ui-life", {24})
+  NewMetaSprite("cursor", {34})
 
   -- Flag Tiles
-  NewMetaSprite("solid", {4, 5, 6, 8, 17, 18, 19, 28, 34})
+  NewMetaSprite("solid", {4, 5, 6, 8, 17, 18, 19, 28})
   NewMetaSprite("platform", {7})
   NewMetaSprite("door-open", {1})
   NewMetaSprite("door-locked", {20})

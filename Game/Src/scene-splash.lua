@@ -39,7 +39,7 @@ function SplashScene:Reset()
 
   -- Create UI
   DrawRect(0, 0, Display().X, 7, 0)
-  DrawRect(0, Display().Y - 8, Display().X, 8, 0)
+  DrawRect(0, Display().Y - 9, Display().X, 9, 0)
   
 
   DrawText("SPACE STATION 8 BY JESSE FREEMAN", 20, -1, DrawMode.TilemapCache, "medium", 3, -4)

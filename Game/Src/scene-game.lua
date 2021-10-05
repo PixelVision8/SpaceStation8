@@ -83,7 +83,7 @@ function GameScene:RestartLevel()
 
   local flagMap = {}
 
-  SOLID, PLATFORM, DOOR_OPEN, DOOR_LOCKED, ENEMY, SPIKE, SWITCH_OFF, SWITCH_ON, LADDER, PLAYER, KEY, GEM = 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11
+  EMPTY, SOLID, PLATFORM, DOOR_OPEN, DOOR_LOCKED, ENEMY, SPIKE, SWITCH_OFF, SWITCH_ON, LADDER, PLAYER, KEY, GEM = -1, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11
 
   -- Find all the sources for each flag {Sprites, FlagId}
   local spriteSrc = {
@@ -185,16 +185,14 @@ function GameScene:RestartLevel()
 
       -- enemy
       elseif(flag == ENEMY ) then
+        
+        local flip = Tile(pos.X, pos.Y).SpriteId ~= MetaSprite("enemy").Sprites[1].Id
       
-        -- print("Enemy", x, y)
-
-        entity = Enemy:Init(x, y)
-        -- totalStars = totalStars + 1
-
-        -- Tile(pos.X, pos.Y, -1)
-
+        entity = Enemy:Init(x, y, flip)
+        
         -- Remove any enemy sprites from the map
         spriteId = -1
+        flag = -1
 
       -- spike
       elseif(flag == SPIKE ) then
@@ -253,11 +251,14 @@ function GameScene:RestartLevel()
 
   if(foundPlayer == false or foundDoor == false or foundKey == false) then
 
-    -- TODO need to pass a message to the scene it was missing things
-    SwitchScene(EDITOR)
+    self:ReturnToEditor()
+
+    return
 
   end
   
+  DrawRect(0, Display().Y - 9, Display().X, 9, 0)
+
   DrawMetaSprite("top-bar", 0, 0, false, false, DrawMode.TilemapCache)
   DrawMetaSprite("bottom-hud", 0, Display().Y - 8, false, false, DrawMode.TilemapCache)
   DrawMetaSprite("ui-o2-border", 8 * 8, Display().Y - 8, false, false, DrawMode.TilemapCache)
@@ -403,7 +404,7 @@ function GameScene:Update(timeDelta)
       if(entity.Update ~= nil) then
 
         -- TODO calculate the next animation frame?
-        self.instances[i]:Update(timeDelta)
+        self.instances[i]:Update(td)
 
       end
 
@@ -515,41 +516,40 @@ function GameScene:Draw()
     
     DrawText(message, offset, -1, DrawMode.SpriteAbove, "medium", 3, -4)
 
-  else
+  end
 
-    for i = 1, self.totalInstances do
+  for i = 1, self.totalInstances do
 
-      local entity = self.instances[i]
+    local entity = self.instances[i]
 
-      if(entity.alive == true) then
-        entity:Draw(0, 0)
-      end
-
-    end
-
-    if(self.invalidateLives == true) then
-      
-      for i = 1, self.maxLives do
-        DrawMetaSprite("ui-life", i * 8, Display().Y - 9, true, false, DrawMode.TilemapCache, self.lives < i and 1 or 3)
-      end
-
-      self.invalidateLives = false
-
-    end
-    
-    if(self.invalidateKey == true) then
-      DrawMetaSprite("ui-key", 40, Display().Y - 8, false, false, DrawMode.TilemapCache, self.hasKey == true and 2 or 1)
-      self.invalidateKey = false
-    end
-
-    if(self.atDoor == false) then
-
-      -- Need to draw the player last since the order of sprite draw calls matters
-      self.microPlatformer:Draw()
-    
+    if(entity.alive == true) then
+      entity:Draw(0, 0)
     end
 
   end
+
+  if(self.invalidateLives == true) then
+    
+    for i = 1, self.maxLives do
+      DrawMetaSprite("ui-life", i * 8, Display().Y - 9, true, false, DrawMode.TilemapCache, self.lives < i and 1 or 3)
+    end
+
+    self.invalidateLives = false
+
+  end
+  
+  if(self.invalidateKey == true) then
+    DrawMetaSprite("ui-key", 40, Display().Y - 8, false, false, DrawMode.TilemapCache, self.hasKey == true and 2 or 1)
+    self.invalidateKey = false
+  end
+
+  if(self.atDoor == false) then
+
+    -- Need to draw the player last since the order of sprite draw calls matters
+    self.microPlatformer:Draw()
+  
+  end
+
 
   -- TODO for debugging flags
   -- if(Button(Buttons.Start)) then
