@@ -16,8 +16,8 @@ Whenever you go to the splash screen, Space Station 5 will automatically create 
 | Version | Path                                                   |
 | ------- | ------------------------------------------------------ |
 | Windows | C:\\Users\\UserName\\Documents\\SpaceStation8\Levels\\ |
-| MacOS   | /Users/UserName/PixelVision8/SpaceStation8/Levels/     |
-| Linux   | /Users/UserName/PixelVision8/SpaceStation8/Levels/     |
+| MacOS   | /Users/UserName/SpaceStation8/Levels/                  |
+| Linux   | /Users/UserName/SpaceStation8/Levels/                  |
 
 Before you can play a map, you'll be taken to the map editor. The editor has two main areas, the map and the tile picker on the bottom:
 
