@@ -83,7 +83,7 @@ function Init()
 
   DrawText(runnerName, startX, 225, DrawMode.TilemapCache, "large", 11)
 
-  DrawText(runnerVer, startX + (#runnerName * 8) + 8, 225, DrawMode.TilemapCache, "small", 11, - 4)
+  DrawText(runnerVer, startX + (#runnerName * 8) + 8, 225, DrawMode.TilemapCache, "medium", 11, - 4)
 
   -- We want to render the text from the bottom of the screen so we offset it and loop backwards.
   for i = 1, total do
@@ -238,7 +238,7 @@ function KeyPressCheck()
     elseif(Key(Keys.LeftShift) or Key(Keys.RightShift)) then
       if(safeMode == false) then
         safeMode = true
-        DrawText("SAFE MODE", 8, 225, DrawMode.TilemapCache, "small", 11, - 4)
+        DrawText("SAFE MODE", 8, 225, DrawMode.TilemapCache, "medium", 11, - 4)
         
         -- Reset the display
         Fullscreen(false)

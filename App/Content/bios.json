@@ -3,7 +3,8 @@
 	"WorkspaceDir" : "Levels",
 	"Resolution": "512x480",
 	"LogFilePath": "/User/Log.txt",
-	"ScreenShotPath": "/User/ScreenShots/",
+	"ScreenshotPath": "/User/Screenshots/",
+	"RecordingPath": "/User/Recordings/",
 	"BootTool": "/PixelVisionOS/Tools/BootTool/",
 	"LoadTool": "/PixelVisionOS/Tools/LoadTool/",
 	"ErrorTool": "/PixelVisionOS/Tools/ErrorTool/",
@@ -12,14 +13,12 @@
 	"SystemVersion": "v0.0.0",
 	"FileDiskMounting": "True",
 	"CRT":"False",
-	"NoAutoRun":"Could not find an OS to boot. Insert a disk or restart in 'safe mode' by holding down the Shift key.",
+	"NoAutoRun":"Could not find a game to boot. Visit spacestation8.download to reinstall.",
 	"NoDefaultTool": "Could not find a default tool to load.",
 	"Exception": "@{error}\nPress Ctrl + 4 to reload the current game.",
 	"LoadError": "There was an issue loading from '@{path}'.",
 	"Warning": "@{error}",
-
 	"ArchiveExtensions": "pv8",
 	"FileExtensions": "png,lua,json,txt,wav,cs",
 	"RequiredFiles": "info.json"
-	
 }

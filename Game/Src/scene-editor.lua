@@ -16,8 +16,7 @@ function EditorScene:Init()
 
   local _editor = {
     cursorPos = NewPoint(0, 0),
-    cursorOffset = NewPoint(),
-    cursorBounds = NewRect(0, 1, Display().X/8, Display().Y/8 - 2),
+    cursorBounds = NewRect(0, 1, (Display().X/8) - 1, (Display().Y/8) - 3),
     currentTile = 0,
     cursorCanvas = NewCanvas(8, 8),
     inputTime = 0,
@@ -26,8 +25,8 @@ function EditorScene:Init()
     blinkDelay = 500,
     blink = false,
     altTile = false,
-    cursorX = 0,
-    cursorY = 0,
+    -- cursorX = 0,
+    -- cursorY = 0,
     tileId = 0,
     selectionX = 0,
     spriteId = 0,
@@ -37,8 +36,9 @@ function EditorScene:Init()
     startCounts = 2,
     selectLock = false,
     startLock = false,
-    mouseTime = 100,
-    lastMousePos = NewPoint()
+    mouseTime = -1,
+    lastMousePos = NewPoint(),
+    hideCursor = true
   }
   setmetatable(_editor, EditorScene) -- make Account handle lookup
 
@@ -138,18 +138,8 @@ function EditorScene:Update(timeDelta)
 
       self.cursorPos.Y = self.cursorPos.Y - 1
 
-      if(self.cursorPos.Y <= 0) then
-        self.cursorPos.Y = self.cursorBounds.Height
-      end
-
-      self:ResetBlink()
-
-    elseif(Button(Buttons.Right)) then
-
-      self.cursorPos.X = self.cursorPos.X + 1
-
-      if(self.cursorPos.X > self.cursorBounds.Width) then
-        self.cursorPos.X = 0
+      if(self.cursorPos.Y < self.cursorBounds.Top) then
+        self.cursorPos.Y = self.cursorBounds.Bottom
       end
 
       self:ResetBlink()
@@ -158,8 +148,20 @@ function EditorScene:Update(timeDelta)
 
       self.cursorPos.Y = self.cursorPos.Y + 1
 
-      if(self.cursorPos.Y > self.cursorBounds.Height) then
-        self.cursorPos.Y = 0
+      if(self.cursorPos.Y > self.cursorBounds.Bottom) then
+        self.cursorPos.Y = self.cursorBounds.Top
+      end
+
+      self:ResetBlink()
+
+    end
+
+    if(Button(Buttons.Right)) then
+
+      self.cursorPos.X = self.cursorPos.X + 1
+
+      if(self.cursorPos.X > self.cursorBounds.Right) then
+        self.cursorPos.X = self.cursorBounds.Left
       end
 
       self:ResetBlink()
@@ -168,8 +170,8 @@ function EditorScene:Update(timeDelta)
 
       self.cursorPos.X = self.cursorPos.X - 1
 
-      if(self.cursorPos.X < 0) then
-        self.cursorPos.X = self.cursorBounds.Width
+      if(self.cursorPos.X < self.cursorBounds.Left) then
+        self.cursorPos.X = self.cursorBounds.Right
       end
 
       self:ResetBlink()
@@ -181,62 +183,10 @@ function EditorScene:Update(timeDelta)
       -- Reset the alt tile
       self.altTile = false
 
-    -- elseif(Button(Buttons.A) or MouseButton(0, InputState.Released)) then
-
-    --   local value = self.spriteId > 0 and self.spriteId or -1
-
-    --   if (Tile(self.cursorPos.X  + self.cursorBounds.X, self.cursorPos.Y  + self.cursorBounds.Y).SpriteId ~= value) then
-        
-    --     Tile(self.cursorPos.X + self.cursorBounds.X, self.cursorPos.Y - 1 + self.cursorBounds.Y, value)
-
-    --     self:ResetBlink()
-
-    --   end
-
     end
 
   end
   
-
-  if(Button(Buttons.A) or MouseButton(0)) then
-
-    local c = self.cursorPos.X  + self.cursorBounds.X
-    local r = self.cursorPos.Y  + self.cursorBounds.Y
-
-    if(r > 1 and r < 18) then
-    
-      local value = self.spriteId > 0 and self.spriteId or -1
-
-      if (Tile(c, r-1).SpriteId ~= value) then
-        
-        Tile(self.cursorPos.X + self.cursorBounds.X, self.cursorPos.Y - 1 + self.cursorBounds.Y, value)
-
-        self:ResetBlink()
-
-      end
-    end
-
-  end
-
-  if(MouseButton(0, InputState.Released)) then
-
-    local c = self.cursorPos.X  + self.cursorBounds.X
-    local r = self.cursorPos.Y  + self.cursorBounds.Y
-
-    if(r > 17) then
--- 
-      -- print("Select tile", c)
-
-      self.currentTile = c
-
-      -- DrawRect(c * 8, 18, 8, 8, 2, DrawMode.SpriteBelow)
-
-    end
-
-  end
-
-  
-
   -- Always check for the button release independent of the timer
   if(Button(Buttons.B, InputState.Released) or MouseButton(1, InputState.Released)) then
 
@@ -259,44 +209,48 @@ function EditorScene:Update(timeDelta)
     
     self.mouseTime = self.mouseTime - (1000 * (timeDelta/1000))
 
-    -- newMousePos.X  = math.floor(newMousePos.X/4) * 4
-    -- newMousePos.Y  = math.floor(newMousePos.Y/4) * 4
-    
     self.cursorPos.X = math.floor((self.lastMousePos.X) / 8)
     self.cursorPos.Y = math.floor((self.lastMousePos.Y) / 8)
 
-    DrawRect(newMousePos.X, newMousePos.Y, 1, 1, 0, DrawMode.Mouse)
-
   end
 
-  if(self.cursorBounds.Contains(self.cursorPos)) then
-  self.cursorX = ((self.cursorPos.X  + self.cursorBounds.X)) * 8
-  self.cursorY = ((self.cursorPos.Y + self.cursorBounds.Y) * 8) - 8
-  end
--- 
+  -- Make sure the cursor is in the bounds
+  self.cursorPos.X = Clamp(self.cursorPos.X, self.cursorBounds.Left, self.cursorBounds.Right)
+  self.cursorPos.Y = Clamp(self.cursorPos.Y, self.cursorBounds.Top, self.cursorBounds.Bottom)
+
   self.tileId = self.currentTile + 1
   self.selectionX = (self.tileId - 1) * 8
 
-
   self.spriteId = self.tiles[self.currentTile + 1][self.altTile == false and 1 or 2]
-
-  -- self.tileId = tiles[1]
   
-  -- self.selectionX = (self.tileId - 1) * 8
+  if(self.lastMousePos.Y > (Display().Y - 8)) then
 
-  -- if(self.altTile and #tiles > 1) then
-  --   self.tileId = tiles[2]
-  -- end
+    self.hideCursor = true
 
-  -- self.spriteId = self.tileId
+    if(MouseButton(0, InputState.Released)) then
 
-  -- if(self.altTile) then
-  --   self.tileId = self.tileId + 20
-  -- end
+      self.currentTile = self.cursorPos.X
+    end
 
-  -- self.spriteId = MetaSprite("tile-picker").Sprites[self.tileId].Id
+  elseif(self.cursorPos.Y <= self.cursorBounds.Bottom) then
 
-  
+    self.hideCursor = false
+
+    if((Button(Buttons.A) or MouseButton(0))) then
+
+        local value = self.spriteId > 0 and self.spriteId or -1
+
+      if (Tile(self.cursorPos.X, self.cursorPos.Y).SpriteId ~= value) then
+        
+        Tile(self.cursorPos.X, self.cursorPos.Y, value)
+
+        self:ResetBlink()
+
+      end
+      
+    end
+
+  end
 
   if((Button(Buttons.Start, InputState.Down) and self.startLock == false) ) then
 
@@ -361,31 +315,34 @@ function EditorScene:Draw()
 
       DrawMetaSprite("cursor", self.lastMousePos.X, self.lastMousePos.Y, false, false, DrawMode.Mouse)
 
-      -- if(self.cursorPos.Y  + self.cursorBounds.Y > 17) then
-
-      --   DrawRect((self.cursorPos.X  + self.cursorBounds.X) * 8, 17 * 8 - 1, 8, 9, 3, DrawMode.SpriteBelow)
-
-      -- end
-
     end
 
-    -- Draw the cursor
-    if(self.blink == true) then
+    if(self.hideCursor == false) then
 
-      -- Mask off the background
-      DrawRect(self.cursorX, self.cursorY, 8, 8, BackgroundColor(), DrawMode.Sprite)
+      local cursorX = self.cursorPos.X * 8
+      local cursorY = self.cursorPos.Y * 8
 
-      -- Draw the currently selected tile
-      DrawSprite(self.spriteId, self.cursorX, self.cursorY, false, false, DrawMode.Sprite)
+      -- Draw the cursor
+      if(self.blink == true) then
 
+        -- Mask off the background
+        DrawRect(cursorX, cursorY, 8, 8, BackgroundColor(), DrawMode.Sprite)
+
+        -- Draw the currently selected tile
+        DrawSprite(self.spriteId, cursorX, cursorY, false, false, DrawMode.Sprite)
+
+      end
+
+      self.cursorCanvas:DrawPixels(cursorX, cursorY, DrawMode.Sprite)
+    
     else
 
-      -- Draw the cursor border
-      self.cursorCanvas:DrawPixels(self.cursorX + self.cursorOffset.X, self.cursorY + self.cursorOffset.Y, DrawMode.Sprite)
+      DrawRect(self.cursorPos.X * 8, Display().Y - 9, 8, 1, 3, DrawMode.UI)
     
     end
     
     -- Draw selected tile background
+
     DrawRect(self.selectionX, Display().Y - 9, 8, 9, 3, DrawMode.Sprite)
 
     -- Draw selected tile

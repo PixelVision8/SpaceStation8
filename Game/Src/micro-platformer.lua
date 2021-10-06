@@ -5,25 +5,6 @@
 	Update to PV8 v1.5 API by Jesse Freeman (@jessefreeman | http://pixelvision8.com)
 ]]--
 
---[[
-	The goal of this cart is to demonstrate a very basic
-	platforming engine in under 100 lines of *code*, while
-	still maintaining an organized and documented game.
-
-	It isn't meant to be a demo of doing as much as possible, in
-	as little code as possible. The 100 line limit is just
-	meant to encourage people to realize "You can make a game
-	with very little coding!"
-
-	This will hopefully give new users a simple and easy to
-	understand starting point for their own platforming games.
-
-	Note: Collision routine is based on mario bros 2 and
-	mckids, where we use collision points rather than a box.
-	this has some interesting bugs but if it was good enough for
-	miyamoto, its good enough for me!
---]]
-
 MicroPlatformer = {}
 MicroPlatformer.__index = MicroPlatformer
 
@@ -69,25 +50,18 @@ function MicroPlatformer:Update(timeDelta)
 
 	local hitRect = self.player.hitRect
 
-
-	-- get the scroll position
-	-- local scrollPos = ScrollPosition()
-
 	local center = hitRect.Center
 	local forward = NewPoint(self.player.dir == false and (hitRect.Right -1) or (hitRect.Left + 1), center.Y)
-	local bottom = NewPoint(center.X, hitRect.Bottom + 1)
+	local bottom = NewPoint(center.X, hitRect.Bottom)
 	local top = NewPoint(center.X, hitRect.Top - 1)
 
-	-- DrawRect(center.X, center.Y, 1, 1, 3, DrawMode.SpriteAbove)
-	-- DrawRect(forward.X, forward.Y, 1, 1, 3, DrawMode.SpriteAbove)
+
 	-- DrawRect(bottom.X, bottom.Y, 1, 1, 3, DrawMode.SpriteAbove)
-	-- DrawRect(top.X, top.Y, 1, 1, 3, DrawMode.SpriteAbove)
-	
+
+
 	-- Keep track of all the collision areas around the player
 	self.currentFlagPos = NewPoint(math.floor(center.X/8), math.floor(center.Y/8))
 	self.currentFlag = Flag(self.currentFlagPos.X, self.currentFlagPos.Y)
-
-	-- DrawRect(math.floor(center.X/8) * 8, math.floor(center.Y/8) * 8, 8, 8, 9, DrawMode.SpriteBelow)
 
 
 	local grav = self.grav
@@ -175,14 +149,11 @@ function MicroPlatformer:Update(timeDelta)
 		--player.
 		local bottomFlag = Flag(math.floor(bottom.X/8), math.floor(bottom.Y/8))
 
-		-- print(bottomFlag, self.player.hitRect)
-
 		-- DrawRect(math.floor(bottom.X/8) * 8, math.floor(bottom.Y/8) * 8, 8, 8, 1, DrawMode.SpriteBelow)
 
 		--look for a solid tile
 		if (bottomFlag == SPIKE  or self.player.hitRect.Y > (Display().Y - 16)) then
 
-			-- print("Kill Player")
 
 			self.player.alive = false
 
@@ -196,14 +167,24 @@ function MicroPlatformer:Update(timeDelta)
 			--allow jumping again
 			self.player.isgrounded = true
 
-			if(Button(Buttons.Down) and bottomFlag == PLATFORM) then
+			-- if(Button(Buttons.Down) and bottomFlag == PLATFORM) then
+			-- 	self.player.hitRect.Y = self.player.hitRect.Y + 10
+			-- end
 
-				self.player.hitRect.Y = self.player.hitRect.Y + 10
+		elseif(bottomFlag == LADDER and self.currentFlag ~= LADDER) then
 
-			end
+			-- self.player.hitRect.Y = math.floor((self.player.hitRect.Y) / 8) * 8
+			self.player.isgrounded = true
 			
-			-- DrawRect(math.floor(testX) * 8, math.floor(testY) * 8, 8, 8, 1, DrawMode.SpriteBelow)
-		
+			self.player.dy = 0
+
+			if(Button(Buttons.Down)) then
+				self.player.hitRect.Y = self.player.hitRect.Y + 1
+			-- else
+			-- 	self.player.hitRect.Y = bottom.Y-1
+			-- 	self.player.dy = 0
+			end
+
 		elseif (bottomFlag == LADDER and Button(Buttons.Down) == false ) then
 			
 		
@@ -236,6 +217,11 @@ function MicroPlatformer:Update(timeDelta)
 			self.player.hitRect.Y = math.floor((self.player.hitRect.Y + 8) / 8) * 8
 			--halt upward velocity
 			self.player.dy = 0
+		--look for solid tile
+		elseif (topFlag == SPIKE) then
+			--position self.player right below
+			--ceiling
+			self.player.alive = false
 
 		end
 	end
@@ -284,7 +270,6 @@ function MicroPlatformer:Update(timeDelta)
 		self.player.spriteID = PLAYER_WALK + self.player.spriteOffset
 
 	else
-
 		-- Idle so use the first sprite
 		self.player.spriteID = PLAYER_IDLE + self.player.spriteOffset
 	end
