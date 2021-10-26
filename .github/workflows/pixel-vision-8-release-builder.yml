@@ -121,3 +121,10 @@ jobs:
             spacestation8-v${{env.CURRENT}}-macOS.zip:Releases/Final/spacestation8-macOS.zip
             spacestation8-v${{env.CURRENT}}-win.zip:Releases/Final/spacestation8-win.zip
             spacestation8-v${{env.CURRENT}}-linux.zip:Releases/Final/spacestation8-linux.zip
+      
+      - name: Update Wiki
+        id: update_wiki
+        uses: OrlovM/Wiki-Action@v1
+        with:
+          path: 'Docs'
+          token: ${{ secrets.GITHUB_TOKEN }}

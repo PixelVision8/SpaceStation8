@@ -1,11 +1,7 @@
 --[[
-  Pixel Vision 8 - ReaperBoy v2
-  Copyright (C) 2017, Pixel Vision 8 (http://pixelvision8.com)
-  Created by Jesse Freeman (@jessefreeman)
+    ## Space Station 8 `scene-editor.lua`
 
-  Licensed under the Microsoft Public License (MS-PL) License.
-
-  Learn more about making Pixel Vision 8 games at http://pixelvision8.com
+    Learn more about making Pixel Vision 8 games at http://docs.pixelvision8.com
 ]]--
 
 -- Splash Scene
@@ -25,13 +21,11 @@ function EditorScene:Init()
     blinkDelay = 500,
     blink = false,
     altTile = false,
-    -- cursorX = 0,
-    -- cursorY = 0,
     tileId = 0,
     selectionX = 0,
     spriteId = 0,
     startTimer = -1,
-    startDelay = 1000,
+    startDelay = 200,
     startCount = 2,
     startCounts = 2,
     selectLock = false,
@@ -67,9 +61,7 @@ function EditorScene:Reset()
   DrawText("PLAY       TILE       DRAW     FLIP    ", 3, -1, DrawMode.TilemapCache, "medium", 3, -4)
   DrawText("      STR        SEL        A        B", 3, -1, DrawMode.TilemapCache, "medium", 2, -4)
   DrawText("     [   ]      [   ]      [ ]      [ ]", 3, -1, DrawMode.TilemapCache, "medium", 1, -4)
-
   
-
   -- Rebuild tilemap
   self.tiles = {
     {00, 00}, -- Empty
@@ -96,7 +88,6 @@ function EditorScene:Reset()
 
   DrawRect(0, Display().Y - 9, Display().X, 9, BackgroundColor())
 
-  -- print("Rebuild picker")
   DrawMetaSprite("tile-picker", 0, 17, false, false, DrawMode.Tile)
 
 end
@@ -112,8 +103,6 @@ function EditorScene:Update(timeDelta)
     self.mouseTime = 1000
 
   end
-
-  
 
   -- Reset select
   if(Button(Buttons.Select, InputState.Released)) then
@@ -274,7 +263,7 @@ function EditorScene:Update(timeDelta)
     
         -- Save the tilemap
 
-        SaveLevel()
+        SaveMap()
 
         -- TODO clear data if we are going back to load screen and go to the loader instead of the splash screen
          -- Switch to play scene
@@ -351,16 +340,3 @@ function EditorScene:Draw()
   end
 
 end
-
-function EditorScene:SaveState()
-  
-  return "GameScene State"
-
-end
-
-function EditorScene:RestoreState(value)
-  
-  -- print("Restore state", state)
-
-end
-

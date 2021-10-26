@@ -1,27 +1,23 @@
 --[[
-  Pixel Vision 8 - ReaperBoy v2
-  Copyright (C) 2017, Pixel Vision 8 (http://pixelvision8.com)
-  Created by Jesse Freeman (@jessefreeman)
+    ## Space Station 8 `scene-splash.lua`
 
-  Licensed under the Microsoft Public License (MS-PL) License.
-
-  Learn more about making Pixel Vision 8 games at http://pixelvision8.com
+    Learn more about making Pixel Vision 8 games at http://docs.pixelvision8.com
 ]]--
 
 -- Splash Scene
 SplashScene = {}
 SplashScene.__index = SplashScene
 
+local BLINK_TIMER = "blinktimer"
+
 function SplashScene:Init()
 
   local _splash = {
-    flickerTime = 0,
-    flickerDelay = 400,
     flickerVisible = true,
     selectLock = false,
     startLock = false
   }
-
+  
   setmetatable(_splash, SplashScene) -- make Account handle lookup
 
   return _splash
@@ -30,30 +26,29 @@ end
 
 function SplashScene:Reset()
 
-  -- print("Create new image")
-
-
+  NewTimer(BLINK_TIMER, 500, 0)
 
   self.selectLock = Button(Buttons.Select, InputState.Down)
   self.startLock = Button(Buttons.Start, InputState.Down)
 
   -- Create UI
-  DrawRect(0, 0, Display().X, 7, 0)
   DrawRect(0, Display().Y - 9, Display().X, 9, 0)
   
 
-  DrawText("SPACE STATION 8 BY JESSE FREEMAN", 20, -1, DrawMode.TilemapCache, "medium", 3, -4)
+  -- DrawText("SPACE STATION 8 BY JESSE FREEMAN", 20, -1, DrawMode.TilemapCache, "medium", 3, -4)
   DrawText("PRESS START FOR EDITOR OR DROP MAP HERE", 3, Display().Y- 9, DrawMode.TilemapCache, "medium", 2, -4)
+
+  -- print("messageBar", messageBar)
+
+  DisplayMessage("SPACE STATION 8 BY JESSE FREEMAN", 2000)
+  
 
 end
 
 function SplashScene:Update(timeDelta)
 
-  -- Universal flicker timer
-  self.flickerTime = self.flickerTime + timeDelta
+  if(TimerTriggered(BLINK_TIMER) == true) then
 
-  if(self.flickerTime > self.flickerDelay) then
-    self.flickerTime = 0
     self.flickerVisible = not self.flickerVisible
   end
 
@@ -76,9 +71,6 @@ function SplashScene:Update(timeDelta)
       -- Switch to level scene
       SwitchScene(EDITOR)
 
-      -- Change song
-      -- PlayPatterns({1}, true)
-
     end
 
   end
@@ -87,33 +79,8 @@ end
 
 function SplashScene:Draw()
 
-  -- if(Button(Buttons.Start)) then
-    
-  --   for i = 1, 96 do
-    
-  --     local pos = CalculatePosition(i-1, 20)
-  --     local id = i-1
-  --     DrawText(tostring((id < 10 and "0" or "") .. id), pos.X * 8, pos.Y * 8, DrawMode.Sprite, "medium", 3, -4)
-
-  --   end
-
-  -- end
-
   if(self.flickerVisible == true) then
     DrawText("      START FOR EDITOR    DROP MAP HERE", 3, Display().Y- 9, DrawMode.Sprite, "medium", 3, -4)
   end
-  
-
-end
-
-function SplashScene:SaveState()
-  
-  return "GameScene State"
-
-end
-
-function SplashScene:RestoreState(value)
-  
-  -- print("Restore state", state)
 
 end

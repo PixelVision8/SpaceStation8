@@ -14,7 +14,7 @@ As you can see, a map is comprised of a `20` x `17` tile grid where each tile is
 
 There are `40` sprites which you can also modify if you want to reskin the game. Each sprite is fixed to a corresponding element in the game, so while you can re-skin the graphics, you will not make new ones or change the internal sprite mapping.
 
-The last thing to keep in mind when modifying the sprites, or even using a drawing too like [Aseprite](https://www.aseprite.org) to modify map files, is that you will have to use the following four colors (`#2D1B2E`, `#574B67`, `#937AC5`, #F9F4EA) .
+The last thing to keep in mind when modifying the sprites, or even using a drawing tools like [Aseprite](https://www.aseprite.org) to modify map files, is that you will have to use the following four colors (`#2D1B2E`, `#574B67`, `#937AC5`, #F9F4EA) .
 
 ![image-20211006001341443](images/palette.png)
 

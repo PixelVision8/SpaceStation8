@@ -1,15 +1,13 @@
 --[[
-  Pixel Vision 8 - ReaperBoy v2
-  Copyright (C) 2017, Pixel Vision 8 (http://pixelvision8.com)
-  Created by Jesse Freeman (@jessefreeman)
+    ## Space Station 8 `scene-game.lua`
 
-  Licensed under the Microsoft Public License (MS-PL) License.
-
-  Learn more about making Pixel Vision 8 games at http://pixelvision8.com
+    Learn more about making Pixel Vision 8 games at http://docs.pixelvision8.com
 ]]--
 
 LoadScript("micro-platformer")
 LoadScript("entities")
+LoadScript("entity-player")
+LoadScript("entity-enemy")
 
 -- Splash Scene
 GameScene = {}
@@ -33,20 +31,11 @@ function GameScene:Init()
     airLoss = 4,
 		maxLives = 3,
 		lives = 3,
-    atDoor = false
+    atDoor = false,
+    microPlatformer = MicroPlatformer:Init()
+
   }
   setmetatable(_game, GameScene) -- make Account handle lookup
-
-  -- _game.levelOffset = 2
-
-  -- _game.bounds = Display();
-
-  _game.microPlatformer = MicroPlatformer:Init()
-  _game.microPlatformer.jumpSound = 4
-  _game.microPlatformer.hitSound = 5
-
-  -- Get a reference to the player entity
-  _game.playerEntity = _game.microPlatformer.player
 
   return _game
 
@@ -61,6 +50,8 @@ end
 
 function GameScene:RestartLevel()
   
+  self.microPlatformer:Reset()
+
   -- Reset everything to default values
   self.atDoor = false
   self.startTimer = -1
@@ -77,8 +68,8 @@ function GameScene:RestartLevel()
   DrawRect(0, Display().Y - 8, Display().X, 8, 2)
 
   -- Clear old instances
-  self.instances = {}
-  self.totalInstances = 0
+  -- self.instances = {}
+  -- self.totalInstances = 0
   self.originalSprites = {}
 
   local flagMap = {}
@@ -174,7 +165,7 @@ function GameScene:RestartLevel()
           flag = DOOR_LOCKED
 
           -- Save the door tile to unlock when the key is found
-          self.doorTile = NewPoint(pos.X, pos.Y)
+          self.doorTile = NewPoint(x, y)
 
         else
 
@@ -194,22 +185,31 @@ function GameScene:RestartLevel()
         spriteId = -1
         flag = -1
 
-      -- spike
-      elseif(flag == SPIKE ) then
-      
-      -- switch-off
-      elseif(flag == SWITCH_OFF ) then
-        
-      -- switch-on
-      elseif(flag == SWITCH_ON ) then
-      
-      -- ladder
-      elseif(flag == LADDER ) then
-        
       -- player
       elseif(flag == PLAYER ) then
         
         if(foundPlayer == false) then
+
+          self.playerEntity = Player:Init(0, 0)
+
+          self.playerEntity.jumpSound = -1
+          self.playerEntity.hitSound = -1
+
+          -- TODO should be built in
+          self.playerEntity.hitRect = NewRect(0, 0, 8, 8)
+          self.playerEntity.spriteID = 1
+
+          -- TODO remove timer
+          self.playerEntity.time = 0
+          self.playerEntity.delay = .1
+
+          -- TODO remap these to the entity and the key to the level
+          self.playerEntity.spriteOffset = 0
+          self.playerEntity.alive = true
+          self.playerEntity.hasKey = false
+
+          self.microPlatformer:AddEntity(self.playerEntity)
+
           self.playerPos = NewPoint(x, y)
 
           foundPlayer = true
@@ -237,11 +237,12 @@ function GameScene:RestartLevel()
 
     Tile(pos.X, pos.Y, spriteId, 0, flag)
 
-
     if(entity ~= nil) then
 
       -- Add the instance to the list to render
-      table.insert(self.instances, entity)
+      -- table.insert(self.instances, entity)
+
+      self.microPlatformer:AddEntity(entity)
 
     end
     
@@ -257,7 +258,8 @@ function GameScene:RestartLevel()
 
   end
   
-  DrawRect(0, Display().Y - 9, Display().X, 9, 0)
+  -- DrawRect(0, Display().Y - 9, Display().X, 9, 0)
+
 
   DrawMetaSprite("top-bar", 0, 0, false, false, DrawMode.TilemapCache)
   DrawMetaSprite("bottom-hud", 0, Display().Y - 8, false, false, DrawMode.TilemapCache)
@@ -277,20 +279,18 @@ function GameScene:RestartLevel()
   DrawText("SPACE STATION 8", Display().X - 68, -1, DrawMode.TilemapCache, "medium", 3, -4)
 
   -- Update the total instance count
-  self.totalInstances = #self.instances
-
+  -- self.totalInstances = #self.instances
 
   -- Reset the player
-  self.playerEntity.hitRect.X = self.playerPos.x
-  self.playerEntity.hitRect.Y = self.playerPos.y
+  self.playerEntity.x = self.playerPos.X
+  self.playerEntity.y = self.playerPos.Y
+
+  -- self.playerEntity.hitRect.X = self.playerPos.X
+  -- self.playerEntity.hitRect.Y = self.playerPos.Y
   self.playerEntity.dx = 0
   self.playerEntity.dy = 0
   self.playerEntity.alive = true
   self.playerEntity.dir = false
-  self.playerEntity.jumpvel = 2.5
-  self.playerEntity.isgrounded = false
-  -- Set the player sprites
-  self.playerEntity.sprites = MetaSprite("player").Sprites
 
 end
 
@@ -352,28 +352,35 @@ function GameScene:Update(timeDelta)
 
 
   -- Check for collisions
-  if(self.microPlatformer.currentFlag == KEY) then
+  if(self.playerEntity.hasKey and self.hasKey == false) then
 
 		self.hasKey = true
-		
-		Tile(self.microPlatformer.currentFlagPos.X, self.microPlatformer.currentFlagPos.Y, -1, 0, -1)
+
+    -- self:ClearTileAt(self.playerEntity.hitRect, MetaSprite("door-open").Sprites[1].Id, DOOR_OPEN)
 
     self.invalidateKey = true
     
     -- DrawRect(self.doorTile.X * 8, self.doorTile.Y * 8, 8, 8, 3)
-    Tile(self.doorTile.X, self.doorTile.Y, MetaSprite("door-open").Sprites[1].Id, 0, DOOR_OPEN)
+    -- Tile(self.doorTile.X, self.doorTile.Y, MetaSprite("door-open").Sprites[1].Id, 0, DOOR_OPEN)
+
+    self:ClearTileAt(self.playerEntity.hitRect)
+
+    self:ClearTileAt(self.doorTile, MetaSprite("door-open").Sprites[1].Id, DOOR_OPEN)
 
     self:IncreaseScore(KEY_POINT)
 
     -- print("KEY COLLISION")
 
-	elseif(self.microPlatformer.currentFlag == GEM) then
+	elseif(self.playerEntity.currentFlag == GEM) then
 
+    print("GEM")
     self:IncreaseScore(GEM_POINT)
 
-		Tile(self.microPlatformer.currentFlagPos.X, self.microPlatformer.currentFlagPos.Y, -1, 0, -1)
+    self:ClearTileAt(self.playerEntity.hitRect)
 
-	elseif(self.microPlatformer.currentFlag == DOOR_OPEN and self.atDoor == false) then
+		-- Tile(self.microPlatformer.currentFlagPos.X, self.microPlatformer.currentFlagPos.Y, -1, 0, -1)
+
+	elseif(self.playerEntity.currentFlag == DOOR_OPEN and self.atDoor == false) then
 		
 		self.atDoor = true
 
@@ -383,40 +390,6 @@ function GameScene:Update(timeDelta)
     self.startCount = WIN_GAME
 
     self:IncreaseScore(EXIT_POINT)
-
-  end
-
-  self.playerEntity.hitRect.X = Repeat(self.playerEntity.hitRect.X, self.bounds.x-4)
-  -- self.playerEntity.hitRect.Y = Repeat(self.playerEntity.hitRect.Y, self.bounds.y)
-
-  -- Loop through all of the entities
-  for i = 1, self.totalInstances do
-
-    -- Get the current entity in the list
-    local entity = self.instances[i]
-
-    -- print("Update Entity", entity)
-
-    -- Test to see if the entity is still alive
-    if(entity.alive == true) then
-
-      -- Test to see if the entity should be updated
-      if(entity.Update ~= nil) then
-
-        -- TODO calculate the next animation frame?
-        self.instances[i]:Update(td)
-
-      end
-
-      -- Test to see if the entity should be updated
-      if(entity.Collision ~= nil) then
-
-        -- TODO calculate the next animation frame?
-        self.instances[i]:Collision(self.playerEntity)
-
-      end
-
-    end
 
   end
 
@@ -481,8 +454,22 @@ function GameScene:Update(timeDelta)
 
   end
 
-  DrawText(LeftPad(tostring(Clamp(self.scoreDisplay, 0, 9999)), 4, "0"), Display().X - (6 * 4), Display().Y - 9, DrawMode.SpriteAbove, "medium", 3, -4)
+  DrawText(string.padLeft(tostring(Clamp(self.scoreDisplay, 0, 9999)), 4, "0"), Display().X - (6 * 4), Display().Y - 9, DrawMode.SpriteAbove, "medium", 3, -4)
 
+
+end
+
+
+-- We can use this function to help making clearing tiles in the map easier. This is called when the player collects the key, gem, or the door is unlocked. It requires a position and an option new sprite id. By default, if no sprite id is provided, the tile will simply be cleared.
+function GameScene:ClearTileAt(pos, newId, newFlag)
+
+  newId = newId or -1
+  newFlag = newFlag or -1
+
+  local col = math.floor(pos.X/8)
+  local row = math.floor(pos.Y/8)
+
+  Tile(col, row, newId, 0, newFlag)
 
 end
 
@@ -549,34 +536,6 @@ function GameScene:Draw()
     self.microPlatformer:Draw()
   
   end
-
-
-  -- TODO for debugging flags
-  -- if(Button(Buttons.Start)) then
-
-  --   local total = 20 * 18
-
-  --   for i = 1, total do
-      
-  --     local pos = CalculatePosition(i-1, 20)
-
-  --     DrawText(Flag(pos.X, pos.Y), pos.X * 8, pos.Y * 8, DrawMode.Sprite, "medium", 3, -5)
-
-  --   end
-
-  -- end
-
-end
-
-function GameScene:SaveState()
-  
-  return "GameScene State"
-
-end
-
-function GameScene:RestoreState(value)
-  
-  -- print("Restore state", state)
 
 end
 

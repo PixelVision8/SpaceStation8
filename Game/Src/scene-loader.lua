@@ -1,11 +1,7 @@
 --[[
-  Pixel Vision 8 - ReaperBoy v2
-  Copyright (C) 2017, Pixel Vision 8 (http://pixelvision8.com)
-  Created by Jesse Freeman (@jessefreeman)
+    ## Space Station 8 `scene-loader.lua`
 
-  Licensed under the Microsoft Public License (MS-PL) License.
-
-  Learn more about making Pixel Vision 8 games at http://pixelvision8.com
+    Learn more about making Pixel Vision 8 games at http://docs.pixelvision8.com
 ]]--
 
 -- Splash Scene
@@ -181,46 +177,8 @@ function LoaderScene:Reset()
 
   -- self.imagePath = UniqueFilePath(NewWorkspacePath())
 
-  SaveLevel(NewWorkspacePath("/User/Levels/" .. self.imagePath.EntityName))
+  SaveMap(NewWorkspacePath("/User/Levels/" .. self.imagePath.EntityName))
 
   SwitchScene(SPLASH)
-
-end
-
-function LoaderScene:Update(timeDelta)
-
-
-end
-
-function LoaderScene:Draw()
-
-  -- if(Button(Buttons.Start)) then
-    
-  --   for i = 1, 96 do
-    
-  --     local pos = CalculatePosition(i-1, 20)
-  --     local id = i-1
-  --     DrawText(tostring((id < 10 and "0" or "") .. id), pos.X * 8, pos.Y * 8, DrawMode.Sprite, "medium", 3, -4)
-
-  --   end
-
-  -- end
-
-  -- if(self.flickerVisible == true) then
-  --   DrawText("      START FOR EDITOR    DROP MAP HERE", 3, Display().Y- 9, DrawMode.Sprite, "medium", 3, -4)
-  -- end
-  
-
-end
-
-function LoaderScene:SaveState()
-  
-  return "GameScene State"
-
-end
-
-function LoaderScene:RestoreState(value)
-  
-  -- print("Restore state", state)
 
 end
