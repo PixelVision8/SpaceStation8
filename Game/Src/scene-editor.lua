@@ -4,7 +4,7 @@
     Learn more about making Pixel Vision 8 games at http://docs.pixelvision8.com
 ]]--
 
--- Splash Scene
+-- We need to create a table to store all of the scene's functions.
 EditorScene = {}
 EditorScene.__index = EditorScene
 

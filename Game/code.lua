@@ -19,7 +19,6 @@ LoadScript("utils")
 
 -- These are the paths the game will need to use for loading maps and switching to the Settings Tool.
 USER_LEVEL_PATH = NewWorkspacePath("/User/Maps/")
-DEFAULT_MAP_PATH = USER_LEVEL_PATH.AppendFile("map.spacestation8.png")
 SETTINGS_TOOL_PATH = "/PixelVisionOS/Tools/Settings/"
 
 -- The `NewWorkspacePath()` API allows us to create a path to the virtual filesystem Pixel Vision 8 sets up when it boots up. You can also add onto WorkspacePaths by calling `AppendFile()` or `AppendDirectory()` and it will return a new `WorkspacePath`. 
@@ -38,9 +37,6 @@ local activeSceneId = 1
 
 -- The `Init()` function is part of the game's lifecycle and called a when a game starts. We'll use this function to configure the mask colors, background color, and scene instances.
 function Init()
-
-  -- We want to change the mask color so when we parse images, `#937AC5`, so we can parse the maps correctly.
-  MaskColor(Color(2))
 
   -- By default, Pixel Vision 8's mask color is `#FF00FF` but we use `#937AC5` so our map png's look exactly how they would in the game.
 

@@ -6,6 +6,9 @@
     Learn more about making Pixel Vision 8 games at http://docs.pixelvision8.com
 ]]--
 
+-- First, we'll define the following constants to correspond to which animation frame to use for each player state.
+PLAYER_IDLE, PLAYER_WALK, PLAYER_JUMP, PLAYER_CLIMB, PLAYER_FALL = 1, 2, 3, 3, 4
+
 -- We need to create a table to store all of the player's functions.
 Player = {}
 Player.__index = Player

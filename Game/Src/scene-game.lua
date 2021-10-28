@@ -9,7 +9,7 @@ LoadScript("entities")
 LoadScript("entity-player")
 LoadScript("entity-enemy")
 
--- Splash Scene
+-- We need to create a table to store all of the scene's functions.
 GameScene = {}
 GameScene.__index = GameScene
 
