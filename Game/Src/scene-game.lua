@@ -4,6 +4,7 @@
     Learn more about making Pixel Vision 8 games at http://docs.pixelvision8.com
 ]]--
 
+-- The game scene needs to load a few dependent scripts first.
 LoadScript("micro-platformer")
 LoadScript("entities")
 LoadScript("entity-player")
@@ -13,39 +14,96 @@ LoadScript("entity-enemy")
 GameScene = {}
 GameScene.__index = GameScene
 
+-- This create a new instance of the game scene
 function GameScene:Init()
 
+  -- These should use a timer instead
   QUIT_TIMER, RESPAWN_TIMER, GAME_OVER_TIMER, WIN_GAME = 2, 1, 4, 4
 
+  -- Now we can define some constants that respresent the points of specific items or actives in the game.
   STEP_POINT, KEY_POINT, GEM_POINT, EXIT_POINT = 10, 50, 100, 500
 
+  EMPTY, SOLID, PLATFORM, DOOR_OPEN, DOOR_LOCKED, ENEMY, SPIKE, SWITCH_OFF, SWITCH_ON, LADDER, PLAYER, KEY, GEM = -1, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11
+
+
+  -- 
   local _game = {
+    
     totalInstances = 0,
-    bounds = Display(),
-    scoreDisplay = 0,
-    startTimer = -1,
-    startDelay = 1000,
-    score = 0,
     maxAir = 100,
     air = 100,
     airLoss = 4,
 		maxLives = 3,
-		lives = 3,
-    atDoor = false,
-    microPlatformer = MicroPlatformer:Init()
+    flagMap = {},
+    microPlatformer = MicroPlatformer:Init(),
+
+    -- TODO Replace with timer
+    startTimer = -1,
+    startDelay = 1000,
 
   }
+
   setmetatable(_game, GameScene) -- make Account handle lookup
+
+  _game:RegisterFlags()
+
 
   return _game
 
 end
 
-function GameScene:Reset()
+-- Since we manually loaded up the tilemap and are not using a tilemap flag file we need to register the flags manually. We'll do this by creating a list of meta sprites and the flags that should be associate with each of their sprites.
+function GameScene:RegisterFlags()
   
+  -- First, we need to build a lookup table for all of the flags. We'll do this by getting the meta sprite's children sprites and associating them with a particular flag. We'll create a nested table that contains arrays. Each array will have an array of sprite ids and a flag id. The final items in the table will be structured as `{sprites, flag}` so when we loop through this later, we can access the sprite array at position `1` and the associated flag at index `2`.
+  local spriteMap = {
+    {"solid", SOLID},
+    {"platform", PLATFORM},
+    {"door-open", DOOR_OPEN},
+    {"door-locked", DOOR_LOCKED},
+    {"enemy", ENEMY},
+    {"spike", SPIKE},
+    {"switch-off", SWITCH_OFF},
+    {"switch-on", SWITCH_ON},
+    {"ladder", LADDER},
+    {"player", PLAYER},
+    {"key", KEY},
+    {"gem", GEM},
+  }
+
+  -- Now we can loop through the sprite names and create a flag lookup table for each of the sprites.
+  for i = 1, #spriteMap do
+
+    -- Since we know that each nested array looks like `{sprites, flag}` we can access the sprite array at position `1` and the associated flag at index `2`. Setting these two variables at the top of the loop just makes it easier to access them.
+    local spriteName = spriteMap[i][1]
+    local flag = spriteMap[i][2]
+    
+    -- Now we need to get all the sprites associated with the meta sprite's name by calling the `MetaSprite()` API.
+    local sprites = MetaSprite(spriteName).Sprites
+
+    -- Calling the `MetaSprite()` API returns a sprite collection. There are several properties and functions that can be called on the sprite collection. The most important one is the `Sprites` property which returns an array of all the sprites in the collection. Each item in the array is a `SpriteData` object which has an `Id` property we can use to determine which sprite in the collection should be associated with the flag.
+
+    -- We'll loop through the flags and create a new array for each flag.
+    for j = 1, #sprites do
+
+      self.flagMap[sprites[j].Id] = flag
+      
+    end
+
+  end
+
+end
+
+function GameScene:Reset()
+
+
+
+  self.title = "PLAYING " .. string.upper(lastImagePath.EntityName:gsub(".spacestation8.png", ""))
+
   self.lives = self.maxLives
 
   self:RestartLevel()
+
 end
 
 function GameScene:RestartLevel()
@@ -56,13 +114,14 @@ function GameScene:RestartLevel()
   self.atDoor = false
   self.startTimer = -1
   self.air = self.maxAir + 10
+  
+  -- Reset the score
   self.score = 0
   self.scoreDisplay = -1
 
   -- Reset the key flag
-  self.hasKey = false
+  self.unlockExit = false
   
-
   -- Create UI
   -- DrawRect(0, 0, Display().X, 7, 0)
   DrawRect(0, Display().Y - 8, Display().X, 8, 2)
@@ -72,50 +131,14 @@ function GameScene:RestartLevel()
   -- self.totalInstances = 0
   self.originalSprites = {}
 
-  local flagMap = {}
-
-  EMPTY, SOLID, PLATFORM, DOOR_OPEN, DOOR_LOCKED, ENEMY, SPIKE, SWITCH_OFF, SWITCH_ON, LADDER, PLAYER, KEY, GEM = -1, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11
-
-  -- Find all the sources for each flag {Sprites, FlagId}
-  local spriteSrc = {
-
-    {MetaSprite("solid").Sprites, SOLID},
-    {MetaSprite("platform").Sprites, PLATFORM},
-    {MetaSprite("door-open").Sprites, DOOR_OPEN},
-    {MetaSprite("door-locked").Sprites, DOOR_LOCKED},
-    {MetaSprite("enemy").Sprites, ENEMY},
-    {MetaSprite("spike").Sprites, SPIKE},
-    {MetaSprite("switch-off").Sprites, SWITCH_OFF},
-    {MetaSprite("switch-on").Sprites, SWITCH_ON},
-    {MetaSprite("ladder").Sprites, LADDER},
-    {MetaSprite("player").Sprites, PLAYER},
-    {MetaSprite("key").Sprites, KEY},
-    {MetaSprite("gem").Sprites, GEM}
-    
-  }
-
-  -- Loop through all of the sprite sources
-  for i = 1, #spriteSrc do
-    
-    -- Save the sprites and flag reference
-    local sprites = spriteSrc[i][1]
-    local flag = spriteSrc[i][2]
-    
-    -- Loop through all of the sprites
-    for j = 1, #sprites do
-
-      -- Map the sprite id to the flag
-      flagMap[sprites[j].Id] = flag
-      
-    end
-
-  end
-
   local total = TilemapSize().X * (TilemapSize().Y - 2)
 
+  -- We need to keep track of some flag while we iterate over all of the tiles in the map. These flags will keep track of the three main things each level needs, a player, a key, and a door.
   local foundPlayer = false
   local foundDoor = false
   local foundKey = false
+
+  -- If we don't fine all of these the map can not be played. So we need to make sure we have all of them after we are done looping through the tiles and kick the player back to the previous screen so the game doesn't throw an error.
 
   -- Loop through all of the tiles
   for i = 1, total do
@@ -123,10 +146,6 @@ function GameScene:RestartLevel()
     local pos = CalculatePosition(i-1, TilemapSize().X)
     
     local tile = Tile(pos.X, pos.Y)
-
-    local entity = nil
-
-    -- print("tile", pos, tile.SpriteId)
 
     local spriteId = tile.SpriteId--tilemapData.SpriteIds.Pixels[i]
 
@@ -136,10 +155,10 @@ function GameScene:RestartLevel()
     local flag = -1
 
     -- See if the sprite is mapped to a tile
-    if(flagMap[spriteId] ~= nil) then
+    if(self.flagMap[spriteId] ~= nil) then
 
       -- Set the flag on the tile
-      flag = flagMap[spriteId]
+      flag = self.flagMap[spriteId]
 
       -- Convert the x and y to pixels
       local x = pos.X * 8
@@ -179,7 +198,7 @@ function GameScene:RestartLevel()
         
         local flip = Tile(pos.X, pos.Y).SpriteId ~= MetaSprite("enemy").Sprites[1].Id
       
-        entity = Enemy:Init(x, y, flip)
+        self.microPlatformer:AddEntity(Enemy:Init(x, y, flip))
         
         -- Remove any enemy sprites from the map
         spriteId = -1
@@ -190,27 +209,11 @@ function GameScene:RestartLevel()
         
         if(foundPlayer == false) then
 
-          self.playerEntity = Player:Init(0, 0)
+          local flip = Tile(pos.X, pos.Y).SpriteId ~= MetaSprite("player").Sprites[1].Id
 
-          self.playerEntity.jumpSound = -1
-          self.playerEntity.hitSound = -1
-
-          -- TODO should be built in
-          self.playerEntity.hitRect = NewRect(0, 0, 8, 8)
-          self.playerEntity.spriteID = 1
-
-          -- TODO remove timer
-          self.playerEntity.time = 0
-          self.playerEntity.delay = .1
-
-          -- TODO remap these to the entity and the key to the level
-          self.playerEntity.spriteOffset = 0
-          self.playerEntity.alive = true
-          self.playerEntity.hasKey = false
+          self.playerEntity = Player:Init(x, y, flip)
 
           self.microPlatformer:AddEntity(self.playerEntity)
-
-          self.playerPos = NewPoint(x, y)
 
           foundPlayer = true
 
@@ -228,24 +231,11 @@ function GameScene:RestartLevel()
 
         foundKey = true
 
-      -- gem
-      elseif(flag == GEM ) then
-
       end
       
     end
 
     Tile(pos.X, pos.Y, spriteId, 0, flag)
-
-    if(entity ~= nil) then
-
-      -- Add the instance to the list to render
-      -- table.insert(self.instances, entity)
-
-      self.microPlatformer:AddEntity(entity)
-
-    end
-    
 
   end
 
@@ -268,29 +258,7 @@ function GameScene:RestartLevel()
 
   DrawText("SCORE", 14*8, Display().Y - 9, DrawMode.TilemapCache, "medium", 2, -4)
 
-
-  local message = string.sub(lastImagePath.EntityName, 0, - #" .spacestation8.png"):upper()
-  local maxChars = 10
-  if(#message > maxChars) then
-    message = string.sub(message, 0, maxChars) .. "..."
-  end
-
-  DrawText("PLAYING " .. message, 8, -1, DrawMode.TilemapCache, "medium", 3, -4)
-  DrawText("SPACE STATION 8", Display().X - 68, -1, DrawMode.TilemapCache, "medium", 3, -4)
-
-  -- Update the total instance count
-  -- self.totalInstances = #self.instances
-
-  -- Reset the player
-  self.playerEntity.x = self.playerPos.X
-  self.playerEntity.y = self.playerPos.Y
-
-  -- self.playerEntity.hitRect.X = self.playerPos.X
-  -- self.playerEntity.hitRect.Y = self.playerPos.Y
-  self.playerEntity.dx = 0
-  self.playerEntity.dy = 0
-  self.playerEntity.alive = true
-  self.playerEntity.dir = false
+  DisplayMessage(self.title, -1)
 
 end
 
@@ -352,33 +320,27 @@ function GameScene:Update(timeDelta)
 
 
   -- Check for collisions
-  if(self.playerEntity.hasKey and self.hasKey == false) then
+  if(self.playerEntity.keyCollected and self.unlockExit == false) then
 
-		self.hasKey = true
-
-    -- self:ClearTileAt(self.playerEntity.hitRect, MetaSprite("door-open").Sprites[1].Id, DOOR_OPEN)
+		self.unlockExit = true
 
     self.invalidateKey = true
     
-    -- DrawRect(self.doorTile.X * 8, self.doorTile.Y * 8, 8, 8, 3)
-    -- Tile(self.doorTile.X, self.doorTile.Y, MetaSprite("door-open").Sprites[1].Id, 0, DOOR_OPEN)
-
-    self:ClearTileAt(self.playerEntity.hitRect)
+    -- Clear the tile the player is currently in
+    self:ClearTileAt(self.playerEntity.center)
 
     self:ClearTileAt(self.doorTile, MetaSprite("door-open").Sprites[1].Id, DOOR_OPEN)
 
     self:IncreaseScore(KEY_POINT)
 
-    -- print("KEY COLLISION")
+	elseif(self.playerEntity.collectedGem == true) then
 
-	elseif(self.playerEntity.currentFlag == GEM) then
-
-    print("GEM")
     self:IncreaseScore(GEM_POINT)
 
-    self:ClearTileAt(self.playerEntity.hitRect)
+    self.playerEntity.collectedGem = false
 
-		-- Tile(self.microPlatformer.currentFlagPos.X, self.microPlatformer.currentFlagPos.Y, -1, 0, -1)
+    self:ClearTileAt(self.playerEntity.center)
+
 
 	elseif(self.playerEntity.currentFlag == DOOR_OPEN and self.atDoor == false) then
 		
@@ -435,7 +397,7 @@ function GameScene:Update(timeDelta)
     percent = 0
   end
 
-  DrawRect((8 * 8) + 2, Display().Y - 6, 36 * percent, 3, 2, DrawMode.Sprite)
+  DrawRect((8 * 8) + 2, Display().Y - 6, 36 * percent, 3, BackgroundColor(), DrawMode.Sprite)
 
   -- Update score
   if(self.scoreDisplay ~= self.score) then
@@ -497,22 +459,14 @@ function GameScene:Draw()
 
     end
 
-    DrawMetaSprite("top-bar", 0, 0, false, false, DrawMode.TilemapCache)
+    DisplayMessage(message, -1, 1)
 
-    local offset = (Display().X - (#message * 4)) * .5
-    
-    DrawText(message, offset, -1, DrawMode.SpriteAbove, "medium", 3, -4)
+  else
 
-  end
+    -- TODO this is being called on every draw frame
 
-  for i = 1, self.totalInstances do
-
-    local entity = self.instances[i]
-
-    if(entity.alive == true) then
-      entity:Draw(0, 0)
-    end
-
+    DisplayMessage(self.title, -1, true)
+  
   end
 
   if(self.invalidateLives == true) then
@@ -526,7 +480,7 @@ function GameScene:Draw()
   end
   
   if(self.invalidateKey == true) then
-    DrawMetaSprite("ui-key", 40, Display().Y - 8, false, false, DrawMode.TilemapCache, self.hasKey == true and 2 or 1)
+    DrawMetaSprite("ui-key", 40, Display().Y - 8, false, false, DrawMode.TilemapCache, self.unlockExit == true and 2 or 1)
     self.invalidateKey = false
   end
 

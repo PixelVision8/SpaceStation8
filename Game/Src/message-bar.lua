@@ -5,7 +5,7 @@
 ]]--
 
 -- This table contains all of the settings for the menu including the font, text color offset, position, maximum characters and the clear color.
-local menuData = {
+local messageBar = {
     textColorOffset = 3,
     font = "medium",
     pos = NewPoint(0, -1),
@@ -43,52 +43,63 @@ end
 function DrawMenu()
     
     -- Check to see if the menu has been invalidated and should be redrawn.
-    if(menuData.invalid == true) then
+    if(messageBar.invalid == true) then
         
         -- Draw a rectangle behind the message text to clear the menu area.
         DrawRect( 
-          menuData.pos.x,
-          menuData.pos.y,
-          menuData.maxChars * 4,
+          messageBar.pos.x,
+          messageBar.pos.y,
+          messageBar.maxChars * 4,
           8,
-          menuData.clearColorID,
+          messageBar.clearColorID,
           DrawMode.TilemapCache
         )
         
         -- Draw the menu text on top of the bar that was just drawn.
         DrawText(
-          menuData.currentMessage,
-          menuData.textPos.x,
-          menuData.textPos.y,
+          messageBar.currentMessage,
+          messageBar.textPos.x,
+          messageBar.textPos.y,
           DrawMode.TilemapCache,
-          menuData.font,
-          menuData.textColorOffset,
-          menuData.offset
+          messageBar.font,
+          messageBar.textColorOffset,
+          messageBar.offset
         )
         
         -- One thing to point out about drawing text to the display is that you can change the color via the color offset argument and the spacing between characters by modifying the offset argument. By default both of these values are set to 0. Making the offset negative, each character will be drawn closer to each other.
     
         -- Reset the menu invalid flag since the text was just drawn to the display. This also ensures we are not redrawing the menu on each frame unless it has been changed in some way.
-        menuData.invalid = false
+        messageBar.invalid = false
     end
 
 end
 
 -- The `DisplayMessage()` function draws the menu text to the display. It accepts a string of text, a time in milliseconds to remain visible for, and whether the text should be centered in the menu or not.
-function DisplayMessage(text, time, centered)
+function DisplayMessage(text, time, centered, onClearCallback)
 
-    -- The time argument for `DisplayMessage()` uses milliseconds to determine how long to stay visible on the display. For example, if you want to show a message for 2 seconds, you would pass in 2000 as the time value. Likewise, if you set the time value to -1, it will disable the timer and the text will remain on the display until the menu is cleared or a new message is passed in.
+    -- We want to make sure that we only display the message if the text is not already being displayed so we check to see if the `text` matches the `currentMessage`.
+    if(messageBar.currentMessage == text) then
 
+        -- Exit out of the function since the message is already displayed.
+        return;
+
+    end
+
+    -- We'll save the any function passed in as a callback so we can call it later when the menu is cleared.
+    messageBar.callBack = onClearCallback
+
+    -- Lua allows us to pass references to a function which we can then call later. This is useful for when we want to call a function whenever some kind of specific event occurs such as when we clear the menu.
+    
     -- Before we display the message, we need to make sure it's note longer than what the menu can display. Here we test the length of the text string to the menu's maxChars value.
-    if(#text > menuData.maxChars) then
+    if(#text > messageBar.maxChars) then
 
         -- If the new message text length is greater than the maxChars we truncate it by the max character value
-        text = string.sub(text, 1, menuData.maxChars)
+        text = string.sub(text, 1, messageBar.maxChars)
 
     end
 
     -- Set the new text as the currentMessage text and change it to uppercase.
-    menuData.currentMessage = string.upper(text)
+    messageBar.currentMessage = text
 
     -- Test to see if the text should be centered.
     if(centered ~= false) then
@@ -96,21 +107,33 @@ function DisplayMessage(text, time, centered)
         -- In Lua you can test variable even if it has been created yet. Since `centered` is an option argument that we want to default to false, we can simple check that centered doesn't equal false.
 
         -- We can center the text by measuring the width of the display, minus the width of the text (taking into account that each character is 4 pixels wide) and then halving it by multiplying the number by .5.
-        menuData.textPos.X = (Display().X - (#text * 4)) * .5
+        messageBar.textPos.X = (Display().X - (#text * 4)) * .5
 
     end
 
     -- This will create a new timer or reset an existing one. We'll set the key to the `MENU_TIMER` constant and supply the time argument.
     NewTimer(MENU_TIMER, time)
 
+    -- The time argument for `DisplayMessage()` uses milliseconds to determine how long to stay visible on the display. For example, if you want to show a message for 2 seconds, you would pass in 2000 as the time value. Likewise, if you set the time value to -1, it will disable the timer and the text will remain on the display until the menu is cleared or a new message is passed in.
+
     -- Since we have changed the text and updated the time, we need to invalidate the entire menu so it will render on correctly on the next frame.
-    menuData.invalid = true
+    messageBar.invalid = true
 
 end
 
 -- The `ClearMessage()` function will set the text message to an empty string and turn the timer off.
 function ClearMessage()
-   
+
+    -- Now that the timer has run out and the message has been cleared, we need to look to see if there is a value for our `callback` property.
+    if(messageBar.callBack ~= nil) then
+
+        -- If a function has been assigned to the `callback` property, we need to call it.
+        messageBar.callBack()
+
+        -- Originally I had thought of putting this in the `Update()` function so it was only triggered when the timer ran out but there may be a scenario where a new message clears a previous one and we'll want to know when that happens. We also need to trigger the callback function before we call `DisplayMessage()` since passing in an empty string to clear it will also set the `callback` property to nil.
+
+    end
+
     -- Here we the call `DisplayMessage()` and pass in the empty string and `-1` for he time.
     DisplayMessage("", -1)
 

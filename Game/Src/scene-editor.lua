@@ -1,7 +1,9 @@
 --[[
-    ## Space Station 8 `scene-editor.lua`
+  ## Space Station 8 `scene-editor.lua`
 
-    Learn more about making Pixel Vision 8 games at http://docs.pixelvision8.com
+  
+  
+  Learn more about making Pixel Vision 8 games at http://docs.pixelvision8.com
 ]]--
 
 -- We need to create a table to store all of the scene's functions.
@@ -15,25 +17,52 @@ function EditorScene:Init()
     cursorBounds = NewRect(0, 1, (Display().X/8) - 1, (Display().Y/8) - 3),
     currentTile = 0,
     cursorCanvas = NewCanvas(8, 8),
-    inputTime = 0,
-    inputDelay = 100,
-    blinkTime = 0,
-    blinkDelay = 500,
+    
     blink = false,
     altTile = false,
     tileId = 0,
     selectionX = 0,
     spriteId = 0,
-    startTimer = -1,
-    startDelay = 200,
     startCount = 2,
     startCounts = 2,
     selectLock = false,
     startLock = false,
-    mouseTime = -1,
     lastMousePos = NewPoint(),
-    hideCursor = true
+    hideCursor = true,
+    
+    -- Switch to timer
+    inputTime = 0,
+    inputDelay = 100,
+    blinkTime = 0,
+    blinkDelay = 500,
+    startTimer = -1,
+    startDelay = 200,
+    mouseTime = -1
   }
+
+  _editor.tiles = {
+    {00, 00}, -- Empty
+    {01, 20}, -- Door
+    {02, 21}, -- Player
+    {03, 22}, -- Enemy
+    {04, 04}, -- Platform Left
+    {05, 05}, -- Platform Center
+    {06, 06}, -- Platform Right
+    {07, 07}, -- Platform
+    {08, 28}, -- Platform Edge (Should remove?)
+    {09, 29}, -- Spike
+    {10, 30}, -- Arrow Up
+    {11, 31}, -- Arrow Right
+    {12, 32}, -- Wall
+    {13, 33}, -- Switch
+    {14, 14}, -- Ladder
+    {15, 15}, -- Key
+    {16, 16}, -- GEM
+    {17, 17}, -- Pillar Bottom
+    {18, 18}, -- Pillar Middle
+    {19, 19}, -- Pillar Top
+  }
+
   setmetatable(_editor, EditorScene) -- make Account handle lookup
 
   return _editor
@@ -62,30 +91,6 @@ function EditorScene:Reset()
   DrawText("      STR        SEL        A        B", 3, -1, DrawMode.TilemapCache, "medium", 2, -4)
   DrawText("     [   ]      [   ]      [ ]      [ ]", 3, -1, DrawMode.TilemapCache, "medium", 1, -4)
   
-  -- Rebuild tilemap
-  self.tiles = {
-    {00, 00}, -- Empty
-    {01, 20}, -- Door
-    {02, 21}, -- Player
-    {03, 22}, -- Enemy
-    {04, 04}, -- Platform Left
-    {05, 05}, -- Platform Center
-    {06, 06}, -- Platform Right
-    {07, 07}, -- Platform
-    {08, 28}, -- Platform Edge (Should remove?)
-    {09, 29}, -- Spike
-    {10, 30}, -- Arrow Up
-    {11, 31}, -- Arrow Right
-    {12, 32}, -- Wall
-    {13, 33}, -- Switch
-    {14, 14}, -- Ladder
-    {15, 15}, -- Key
-    {16, 16}, -- GEM
-    {17, 17}, -- Pillar Bottom
-    {18, 18}, -- Pillar Middle
-    {19, 19}, -- Pillar Top
-  }
-
   DrawRect(0, Display().Y - 9, Display().X, 9, BackgroundColor())
 
   DrawMetaSprite("tile-picker", 0, 17, false, false, DrawMode.Tile)

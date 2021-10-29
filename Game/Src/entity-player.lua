@@ -19,27 +19,27 @@ function Player:Init(x, y, flip)
   -- To configure the base properties for the player, we need to create a new entity by calling `CreateEntity()`. This will return a table that we can use to configure the player's properties. We need to pass in the player's `x` and `y' position, then hard code the sprite name to `player` with an animation delay of `200` milliseconds.
   local player = CreateEntity(x, y, "player", 200)
 
-  -- The player also has some custom properties that we can set in the `player` table, such as the `speed` at which the player can move.
-  player.speed = 1
-
-  -- We can also set the `flipH` value for the player depending on if we want the player to face right (`false`) or left (`true`). If a `flip` argument isn't supplied, we default it to `false`.
-  player.flipH = flip or false
-
   -- Here, we set the player to the `TYPE_PLAYER` constant defined in the micro-platformer. Other entities can check against this type and know if they are colliding with the player when setting their `checkAgainst` value to `TYPE_PLAYER`.
   player.type = TYPE_PLAYER
 
   -- All entities need to be added to the `entities` table. When they are, some entities will be able to collide with each other. To help resolve these collisions, we need to define a collision `type`. If you do not provide a `checkAgainst` value, the entity will not collide with anything. We want all the game's enemies to look for the player, not the other way around. 
 
-  -- The player has custom animation logic that is not used by other entities in the game. We need to set a `spriteIdOffset` value which we'll use later when determining the correct sprite id to draw to the display.
-  player.spriteIdOffset = 0
+  -- The player has custom animation logic that is not used by other entities in the game. We need to set a `spriteOffset` value which we'll use later when determining the correct sprite id to draw to the display.
+  player.spriteOffset = 0
 
-  -- Each animation is made up of 2 frames.-- The player is made up of a collection of different sprites based on moving, jumping, or idle. We need to set the `spriteId` to the correct sprite id based on the player's current state. To animate the player, we'll increase the `spriteIdOffset` value by `1` every frame so the animation will play correctly.
+  -- Each animation is made up of 2 frames.-- The player is made up of a collection of different sprites based on moving, jumping, or idle. We need to set the `spriteId` to the correct sprite id based on the player's current state. To animate the player, we'll increase the `spriteOffset` value by `1` every frame so the animation will play correctly.
+
+  -- The player also has some custom properties that we can set in the `player` table, such as the `speed` at which the player can move.
+  player.speed = 1
+
+  -- We can also set the `flipH` value for the player depending on if we want the player to face right (`false`) or left (`true`).
+  player.flipH = flip or false
 
   -- Now that the player is configured, we can set the `player` metatable as `Player` to inherit all of the functions we define here.
   setmetatable(player, Player)
 
   -- Registering a Lua table as a metatable allows us to modify its behavior and attach meta methods defined on the source table.
-  
+
   -- Finally, we can return an instance of the player to use elsewhere in the game.
   return player
 
@@ -110,7 +110,7 @@ function Player:LateUpdate(timeDelta)
   if(self.currentFlag == KEY) then
     
     -- Since the player is collecting the key, we need to set the `keyCollected` flag to true. The game will know that the player has collected the key and will update the UI and unlock the door.
-    self.hasKey = true
+    self.keyCollected = true
   
   -- There is another collectible in the game, the `GEM`. We can test for this by checking the player's `currentFlag` like the key.
   elseif(self.currentFlag == GEM) then

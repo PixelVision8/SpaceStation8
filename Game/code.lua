@@ -12,7 +12,7 @@ LoadScript("scene-splash")
 LoadScript("scene-editor")
 LoadScript("scene-draw")
 LoadScript("scene-game")
-LoadScript("menu")
+LoadScript("message-bar")
 LoadScript("utils")
 
 -- Pixel Vision 8 will ignore scripts it's can't fine in the `/Game/Src/` directory which is helpful if you are just sketching out a game and where you want to put the logic.
@@ -22,6 +22,14 @@ USER_LEVEL_PATH = NewWorkspacePath("/User/Maps/")
 SETTINGS_TOOL_PATH = "/PixelVisionOS/Tools/Settings/"
 
 -- The `NewWorkspacePath()` API allows us to create a path to the virtual filesystem Pixel Vision 8 sets up when it boots up. You can also add onto WorkspacePaths by calling `AppendFile()` or `AppendDirectory()` and it will return a new `WorkspacePath`. 
+
+DEFAULT_MAP_PATH = NewWorkspacePath("/Game/map.spacestation8.png")
+DEFAULT_SPRITE_PATH = NewWorkspacePath("/Game/sprites.png")
+USER_MAP_PATH = NewWorkspacePath("/User/Maps/")
+--[[
+    Games can read files inside of their own directory. When a game is loaded into memory a virtual file system is created and mapped to the `/Game/` drive. This allows the game to read files from its own directory in a save way by constraining the file system to stay only in the `/Game/` directory. Once the game is loaded, you can access any file by using the `NewWorkspacePath()` API and passing in an absolute path to the file.
+]]--
+
 
 -- Since variable in Lua are global by default we can take advantage of this and create global constants to emulate an enum you'd find in other languages like C#. Here we define all of the game modes and set a int value to make it easier to switch between scenes by name instead of memorizing the Id.
 LOADER, SPLASH, EDITOR, RUN, OVER = 1, 2, 3, 4, 2
