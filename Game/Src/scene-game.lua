@@ -131,7 +131,7 @@ function GameScene:RestartLevel()
   -- self.totalInstances = 0
   self.originalSprites = {}
 
-  local total = TilemapSize().X * (TilemapSize().Y - 2)
+  local total = TilemapSize().C * (TilemapSize().R - 2)
 
   -- We need to keep track of some flag while we iterate over all of the tiles in the map. These flags will keep track of the three main things each level needs, a player, a key, and a door.
   local foundPlayer = false
@@ -143,7 +143,7 @@ function GameScene:RestartLevel()
   -- Loop through all of the tiles
   for i = 1, total do
 
-    local pos = CalculatePosition(i-1, TilemapSize().X)
+    local pos = CalculatePosition(i-1, TilemapSize().C)
     
     local tile = Tile(pos.X, pos.Y)
 
@@ -499,7 +499,7 @@ function GameScene:RestoreTilemap()
   
   for i = 1, total do
     
-    local pos = CalculatePosition(i-1, TilemapSize().X)
+    local pos = CalculatePosition(i-1, TilemapSize().C)
 
     Tile(pos.X, pos.Y, self.originalSprites[i], 0, -1)
 

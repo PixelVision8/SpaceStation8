@@ -7,10 +7,9 @@
 ]]--
 
 -- We use the `LoadScript()` API to load each Lua file inside of the `/Game/Src/` directory. We can use this API to break down game logic into smaller, self-contained files.
-LoadScript("scene-loader")
+
 LoadScript("scene-splash")
 LoadScript("scene-editor")
-LoadScript("scene-draw")
 LoadScript("scene-game")
 LoadScript("message-bar")
 LoadScript("utils")
@@ -30,11 +29,10 @@ USER_MAP_PATH = NewWorkspacePath("/User/Maps/")
     Games can read files inside of their own directory. When a game is loaded into memory a virtual file system is created and mapped to the `/Game/` drive. This allows the game to read files from its own directory in a save way by constraining the file system to stay only in the `/Game/` directory. Once the game is loaded, you can access any file by using the `NewWorkspacePath()` API and passing in an absolute path to the file.
 ]]--
 
-
 -- Since variable in Lua are global by default we can take advantage of this and create global constants to emulate an enum you'd find in other languages like C#. Here we define all of the game modes and set a int value to make it easier to switch between scenes by name instead of memorizing the Id.
-LOADER, SPLASH, EDITOR, RUN, OVER = 1, 2, 3, 4, 2
+SPLASH, EDITOR, RUN, OVER = 1, 2, 3, 1
 
--- We can also share Ids between scenes this way as well. Since the Splash and Over scenes are the same, we will use the some Id, `2`, for both scenes.
+-- We can also share Ids between scenes this way as well. Since the Splash and Over scenes are the same, we will use the some Id, `1`, for both scenes.
 
 -- Here we set up several local variables to store the scenes, the active scene, and the active scene Id.
 local scenes = nil
@@ -53,15 +51,12 @@ function Init()
   
   -- Now we are going to create a table for each scene instance by calling the scene's Init() function.
   scenes = {
-    LoaderScene:Init(),
     SplashScene:Init(),
     EditorScene:Init(),
     GameScene:Init(),
   }
 
-
   --[[
-    
   If you try to run the code before you have a scene before you create the code for it, you will get an error. You can create the following files in your `/Game/Src/` folder as a place holder while we get the rest of the game working: `scene-loader.lua`, `scene-splash.lua`, `scene-editor.lua`, and `scene-game.lua`. 
   
   You can use the following template for each scene's code file, just replace the scene name with the scene you are creating.
@@ -85,10 +80,18 @@ function Init()
   ```
 
   ]]--
+
   -- Now that we have all of the scenes loaded into memory, we can call the `SwitchScene()` function and load the default scene.
-  SwitchScene(LOADER)
+  SwitchScene(SPLASH)
 
   -- The loader scene is responsible for reading and parsing map data. We usually call this scene before any others in order to configure the level correctly before we edit or play it.
+
+end
+
+-- We are going to use this function, which is called when the game's opening message disappears. This will kick off the logic to move from one map to another so the player can easily choose other maps they have created.
+function OnLoaded()
+  
+
 
 end
 
@@ -129,7 +132,9 @@ function Update(timeDelta)
 
   -- Next, we need to check to see if there is an active scene before trying to update it. If one exists, we'll call `Update()` on the active scene and pass in the timeDelta.
   if(activeScene ~= nil) then
+
     activeScene:Update(timeDelta)
+  
   end
 
   -- Finally, we call the `UpdateMessageBar()` function and pass in the timeDelta value.
@@ -168,18 +173,18 @@ function SaveMap(newPath)
   end
 
   -- To save the map, we'll need to make a new Canvas first. We'll use the canvas to rebuild the map image, add text, and add the sprites at the bottom.  We'll create the canvas to match the size of the tilemap which is `160` x `152` pixels or `20` x `19` tiles.
-  local mapCanvas = NewCanvas(TilemapSize().X * 8, TilemapSize().Y * 8)
+  local mapCanvas = NewCanvas(TilemapSize().X, TilemapSize().Y)
 
   -- It's important to note that the tilemap is larger thant the display. This is because when it loads up the last two rows contain all of the sprites for the game. So when we go to save an image of the map, we want to make sure it has enough room for all tiles and sprites the game needs.
   
   -- Before we can copy the tiles to the canvas, we'll need to calculate how manu tiles there are by multiplying the tilemap size's `X` (Rows) by `Y` (Columns).
-  local total = TilemapSize().X * TilemapSize().Y
+  local total = TilemapSize().C * TilemapSize().R
 
   -- We'll use this loop to go through all of the tiles and copy them to the canvas.
   for i = 1, total do
 
     -- Use the game's `CalculatePosition()` function to return a point with the current tile's `X` and `Y` value based on the current loop's index.
-    local pos = CalculatePosition(i-1, TilemapSize().X)
+    local pos = CalculatePosition(i-1, TilemapSize().C)
 
     -- Since Lua doesn't support `0` based arrays, we need to subtract `1` from the loop's index value, `i`, so we can get the correct position from the Game Chip's `CalculatePosition()` function.
 
@@ -203,13 +208,13 @@ function SaveMap(newPath)
   mapCanvas.DrawText(message, x, -1, "medium", 3, -4)
 
   -- The last thing we need to do is draw all of the sprites to the bottom of the map. Since we automatically create a meta sprite of them when the map is loaded up, we can just use `DrawMetaSprite()` instead of looping through all of them by hand.
-  mapCanvas.DrawMetaSprite("tile-picker", 0, (TilemapSize().Y - 2) * 8)
+  mapCanvas.DrawMetaSprite("tile-picker", 0, (TilemapSize().R - 2) * 8)
 
   -- Now that we have everything drawn to the canvas we can copy the pixel data over to a new Image instance by calling `NewImage()`. We'll pass in the canvas's `width`, `height`, `pixels`, and the `colors` to use from memory.
   local tmpImage = NewImage(mapCanvas.Width, mapCanvas.Height, mapCanvas.GetPixels(), {MaskColor(),Color(0), Color(1), Color(2), Color(3)})
 
   -- Finally, we have everything we need to save the image to the user's map folder. We can call the `SaveImage()` function and pass it the path and image we just created.
-  SaveImage(lastImagePath, tmpImage)
+  -- SaveImage(lastImagePath, tmpImage)
 
 end
 

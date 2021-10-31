@@ -10,7 +10,7 @@ local messageBar = {
     font = "medium",
     pos = NewPoint(0, -1),
     textPos = NewPoint(0,-1),
-    maxChars = Display().X/4 - 2,
+    maxChars = Display().X/4,
     offset = -4,
     clearColorID = 0
   }
@@ -56,13 +56,13 @@ function DrawMenu()
         )
         
         -- Draw the menu text on top of the bar that was just drawn.
-        DrawText(
+        DrawColoredText(
           messageBar.currentMessage,
           messageBar.textPos.x,
           messageBar.textPos.y,
           DrawMode.TilemapCache,
           messageBar.font,
-          messageBar.textColorOffset,
+          messageBar.textColorOffsets,
           messageBar.offset
         )
         
@@ -75,7 +75,28 @@ function DrawMenu()
 end
 
 -- The `DisplayMessage()` function draws the menu text to the display. It accepts a string of text, a time in milliseconds to remain visible for, and whether the text should be centered in the menu or not.
-function DisplayMessage(text, time, centered, onClearCallback)
+function DisplayMessage(value, time, centered, onClearCallback)
+
+    -- In order to display a message we need text and color offsets. We'll use these two variables to store these once we break down the `value` argument.
+    local text = ""
+    local colorOffsets = {messageBar.textColorOffset}
+
+    -- In order for us to use the `DrawColoredText()` API, we need an array of color offsets to tell the renderer which color to use for each character. By default, the `DrawColoredText()` API will use the last color offset it find so by creating an array with a single color offset, we can ensure that the text is always drawn with message bar's default color offset in the `textColorOffset` variable.
+
+    -- Since Lua doesn't support overload functions, we need to check to see if the `value` argument is a string or a table.
+    if(type(value) == "string") then
+
+        -- Since the value is a string, we can just set it to the `text` variable and use the default color offset.
+        text = value
+
+    -- Now we need to test if the `value` argument is a table.
+    elseif(type(value) == "table") then
+        
+        -- Since the value is a table, we need to pull out the first item which is the text and the second item which is the color offset array.
+        text = value[1]
+        colorOffsets = value[2]
+
+    end
 
     -- We want to make sure that we only display the message if the text is not already being displayed so we check to see if the `text` matches the `currentMessage`.
     if(messageBar.currentMessage == text) then
@@ -100,6 +121,7 @@ function DisplayMessage(text, time, centered, onClearCallback)
 
     -- Set the new text as the currentMessage text and change it to uppercase.
     messageBar.currentMessage = text
+    messageBar.textColorOffsets = colorOffsets
 
     -- Test to see if the text should be centered.
     if(centered ~= false) then
@@ -124,17 +146,19 @@ end
 -- The `ClearMessage()` function will set the text message to an empty string and turn the timer off.
 function ClearMessage()
 
+    local lastCallback = messageBar.callBack
+
+    -- Here we the call `DisplayMessage()` and pass in the empty string and `-1` for he time.
+    DisplayMessage("", -1)
+
     -- Now that the timer has run out and the message has been cleared, we need to look to see if there is a value for our `callback` property.
-    if(messageBar.callBack ~= nil) then
+    if(lastCallback ~= nil) then
 
         -- If a function has been assigned to the `callback` property, we need to call it.
-        messageBar.callBack()
+        lastCallback()
 
         -- Originally I had thought of putting this in the `Update()` function so it was only triggered when the timer ran out but there may be a scenario where a new message clears a previous one and we'll want to know when that happens. We also need to trigger the callback function before we call `DisplayMessage()` since passing in an empty string to clear it will also set the `callback` property to nil.
 
     end
-
-    -- Here we the call `DisplayMessage()` and pass in the empty string and `-1` for he time.
-    DisplayMessage("", -1)
 
 end
