@@ -41,6 +41,11 @@ local activeSceneId = 1
 
 -- Each Lua script has it's own scope so we can hide these values from other scripts we load up by making them local.
 
+local topMessageBar = MessageBar:Init(-1)
+local bottomMessageBar = MessageBar:Init(Display().Y - 9)
+
+
+
 -- The `Init()` function is part of the game's lifecycle and called a when a game starts. We'll use this function to configure the mask colors, background color, and scene instances.
 function Init()
 
@@ -88,13 +93,6 @@ function Init()
 
 end
 
--- We are going to use this function, which is called when the game's opening message disappears. This will kick off the logic to move from one map to another so the player can easily choose other maps they have created.
-function OnLoaded()
-  
-
-
-end
-
 -- We use this function to prepare a new scene and run through all of the steps required to make sure the new scene is correctly reset and ready to go.
 function SwitchScene(id)
 
@@ -138,7 +136,9 @@ function Update(timeDelta)
   end
 
   -- Finally, we call the `UpdateMessageBar()` function and pass in the timeDelta value.
-  UpdateMenu(timeDelta)
+  -- UpdateMenu(timeDelta)
+  topMessageBar:Update(timeDelta)
+  bottomMessageBar:Update(timeDelta)
 
 end
 
@@ -157,84 +157,31 @@ function Draw()
   end
 
   -- Redraw the menu by call its `DrawMenu()` function.
-  DrawMenu()
+  topMessageBar:Draw()
+  bottomMessageBar:Draw()
 
 end
 
--- The `SaveLevel()` function accepts a path and saves the current map to the `/Game/Maps/` directory.
-function SaveMap(newPath)
+function DisplayTitle(value, time, centered, onClearCallback)
 
-  -- Test to see if there is a value for the `newPath`.
-  if(newPath~= nil) then
-    
-    -- We need to save the last path so we know how to update the map if there are changes later on while editing it.
-    lastImagePath = UniqueFilePath(newPath)
-    
-  end
-
-  -- To save the map, we'll need to make a new Canvas first. We'll use the canvas to rebuild the map image, add text, and add the sprites at the bottom.  We'll create the canvas to match the size of the tilemap which is `160` x `152` pixels or `20` x `19` tiles.
-  local mapCanvas = NewCanvas(TilemapSize().X, TilemapSize().Y)
-
-  -- It's important to note that the tilemap is larger thant the display. This is because when it loads up the last two rows contain all of the sprites for the game. So when we go to save an image of the map, we want to make sure it has enough room for all tiles and sprites the game needs.
-  
-  -- Before we can copy the tiles to the canvas, we'll need to calculate how manu tiles there are by multiplying the tilemap size's `X` (Rows) by `Y` (Columns).
-  local total = TilemapSize().C * TilemapSize().R
-
-  -- We'll use this loop to go through all of the tiles and copy them to the canvas.
-  for i = 1, total do
-
-    -- Use the game's `CalculatePosition()` function to return a point with the current tile's `X` and `Y` value based on the current loop's index.
-    local pos = CalculatePosition(i-1, TilemapSize().C)
-
-    -- Since Lua doesn't support `0` based arrays, we need to subtract `1` from the loop's index value, `i`, so we can get the correct position from the Game Chip's `CalculatePosition()` function.
-
-    -- Here we are going to read the tile at the pos's `X`,`Y` value and save the `SpriteId` to a variable.
-    local sprite = Tile(pos.X, pos.Y).SpriteId
-
-    -- Now that we have the tile's position and sprite id we can draw it into the canvas.
-    mapCanvas.DrawSprite(sprite, pos.X * 8, pos.Y * 8)
-
-    -- The Canvas supports all of the same drawing calls at the Game Chip. Since the canvas doesn't use the same render model as the display, you don't have to supply a DrawMode. Every draw call is added to the canvas and when you access the Canvas's pixel data, it renders everything into a single layer.
-
-  end
-
-  -- We add instructions to the top of every map image that tells people where to download the game from. Here we set the message text and then draw it into the canvas.
-  local message = "PLAY AT SPACESTATION8.DOWNLOAD"
-
-  -- In order to center the text we'll need to calculate its `X` position by getting the Display's width, `X`, subtracting the width of the messages characters, and dividing it in half by multiplying everything by `.5`.
-  local x = (Display().X - (#message * 4)) * .5
-
-  -- Now that we have the message and the position, we can draw it onto the canvas via the `DrawText()` function.
-  mapCanvas.DrawText(message, x, -1, "medium", 3, -4)
-
-  -- The last thing we need to do is draw all of the sprites to the bottom of the map. Since we automatically create a meta sprite of them when the map is loaded up, we can just use `DrawMetaSprite()` instead of looping through all of them by hand.
-  mapCanvas.DrawMetaSprite("tile-picker", 0, (TilemapSize().R - 2) * 8)
-
-  -- Now that we have everything drawn to the canvas we can copy the pixel data over to a new Image instance by calling `NewImage()`. We'll pass in the canvas's `width`, `height`, `pixels`, and the `colors` to use from memory.
-  local tmpImage = NewImage(mapCanvas.Width, mapCanvas.Height, mapCanvas.GetPixels(), {MaskColor(),Color(0), Color(1), Color(2), Color(3)})
-
-  -- Finally, we have everything we need to save the image to the user's map folder. We can call the `SaveImage()` function and pass it the path and image we just created.
-  -- SaveImage(lastImagePath, tmpImage)
+  topMessageBar:DisplayMessage(value, time, centered, onClearCallback)
 
 end
 
+function ClearTitle()
 
--- TODO THIS STILL NEEDS TO BE CLEANED UP
+  topMessageBar:ClearMessage()
 
-lastImagePath = NewWorkspacePath("/User/Levels/map.spacestation8.png")
+end
 
+function DisplayMessage(value, time, centered, onClearCallback)
 
--- The `OnLoad()` Function is responsible for loading a new map into memory. 
-function OnLoadImage(value)
+  bottomMessageBar:DisplayMessage(value, time, centered, onClearCallback)
 
-  if(activeSceneId == SPLASH or activeSceneId == LOADER) then
-    
-    value.RemapColors({MaskColor(),Color(0), Color(1), Color(2), Color(3)})
+end
 
-    scenes[LOADER].defaultMapImage = value
+function ClearMessage()
 
-    SwitchScene(LOADER)
-
-  end
+  bottomMessageBar:ClearMessage()
 
 end

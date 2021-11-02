@@ -10,20 +10,17 @@ LoadScript("map-loader")
 SplashScene = {}
 SplashScene.__index = SplashScene
 
-BLINK_TIMER = "blinktimer"
+-- BLINK_TIMER = "blinktimer"
 MAP_EXTENSION = ".png"
 
 
 function SplashScene:Init()
 
+  -- The splash screen will be responsible for loading a tilemap into memory. We'll create a new instance of the `MapLoader` so the scene has access to it.
   local _splash = {
-    flickerVisible = false,
-    startLock = false
+    mapLoader = MapLoader:Init()
   }
 
-  -- The splash screen will be responsible for loading a tilemap into memory. We'll create a new instance of the `MapLoader` so the scene has access to it.
-  _splash.mapLoader = MapLoader:Init()
-  
   setmetatable(_splash, SplashScene) -- make Account handle lookup
 
   return _splash
@@ -32,11 +29,17 @@ end
 
 function SplashScene:Reset()
 
+  ClearTitle()
+  ClearMessage()
+
+  -- Reset the start lock so we can start the game again.
+  self.startLock = false
+  self.flickerVisible = false
 
   -- We are going to load all of the map files inside of the `USER_MAP_PATH` folder. In order to load them later on, we'll add each map to this table.
   self.maps = {}
   
-    -- The `GetEntities()` function will return all of the items at a given path. We are going to use this to get all of the files that are in the `/User/Maps/` path which we define in the `code.lua`'s `USER_MAP_PATH' constant.
+  -- The `GetEntities()` function will return all of the items at a given path. We are going to use this to get all of the files that are in the `/User/Maps/` path which we define in the `code.lua`'s `USER_MAP_PATH' constant.
   local entities = GetEntities(USER_MAP_PATH)
 
   -- Now that we have all the items in the path, we need to loop through them and add them to the `maps` table.
@@ -60,34 +63,46 @@ function SplashScene:Reset()
 
   -- If you are new to Lua or come from another programing language, its important to point out that arrays, which are indexed tables in Lua, start at 1. So by calling `table.insert()` and supplying `1` as the index, we are inserting the default map path at the beginning of the maps array.
 
-  NewTimer(BLINK_TIMER, 500, 0)
-
   -- Now we are going to call the `LoadMap()` function in order to load the first map in the list.
   self:LoadMap(1)
 
-  -- Since hte `DisplayMessage()` function uses the `DrawColoredText()` API, we can pass in a color map for each character by making the `message` variable a table. The first item is the text for the message and the second is an array of colors offsets for each character.
+  -- Since hte `DisplayTitle()` function uses the `DrawColoredText()` API, we can pass in a color map for each character by making the `message` variable a table. The first item is the text for the message and the second is an array of colors offsets for each character.
 
   -- It's important to note that if there are not enough colors offsets for the characters, the last color offset will be used for the rest of the text.
 
-  DisplayMessage("SPACE STATION 8", 3000, true, function() self:OnLoad() end)
-
-  DrawRect(0, Display().Y - 9, Display().X, 9)
-
+  local title = MessageBuilder(
+    {
+      {"SPACE STATION 8 ", 3},
+      {"BY ", 2},
+      {"JESSE FREEMAN", 3}
+    }
+  )
   -- Now that the game is loaded, we can display the base text we'll use for instruction on how to start the game.
-  DrawText("CREATED BY JESSE FREEMAN FOR LD JAM 49", 4, Display().Y- 9, DrawMode.TilemapCache, "medium", 2, -4)
-  
+  DisplayTitle(title, 3000, true, function() self:OnLoad() end)
+
+  local message = MessageBuilder(
+    {
+      {"A ", 2},
+      {"MICRO PLATFORMER ", 3},
+      {"FOR ", 2},
+      {"PIXEL VISION 8", 3}
+    }
+  )
+
+  DisplayMessage(message, -1)
+
 end
 
+-- This function is called when the message displaying the game's title disappears. We use this to tell the scene that it's fully loaded and ready to be start looking for player input to load a map or start the game.
 function SplashScene:OnLoad()
 
+  print("On Load")
+
+  -- We set this `loaded` flag to true so the update function knows it can execute its code.
   self.loaded = true
 
-
-
-
-
+  -- We call the `UpdateTitle()` function to redraw the title text at the top and bottom of the screen.
   self:UpdateTitle()
-  -- DisplayMessage("Hello", -1, true)
 
 end
 
@@ -109,14 +124,17 @@ end
 
 function SplashScene:UpdateTitle()
 
-  -- -- Clear any previous message
+  -- Clear any previous message
+  ClearTitle()
   ClearMessage()
-
 
   -- Now its time to draw bars on the top and bottom of the screen for the UI. We'll use the `DrawRect()` API to draw a rectangle on the top starting at `0`,`0` which is the upper left corner of the screen. The bar will go across the screen so we use `Display().X` for the width, and `SpriteSize().Y` which is 8 pixels for the height.
   DrawRect(0, 0, Display().X, SpriteSize().Y-1)
 
   -- By default, the `DrawRect()` API draws a rectangle using color id `0` and uses `DrawMode.TilemapCache` which means that the rectangle will be drawn into the tilemap cache.
+
+   DrawRect(0, Display().Y - SpriteSize().Y - 1, Display().X, SpriteSize().Y+1)
+
 
   -- Once we have the top bar drawn, we can do the same for the bottom. This time we are going to shift the `y` position to the bottom of the screen by using `Display().Y` and then subtract a single row of pixels via `SpriteSize().Y` plus `1` additional pixel to move the bar into the correct position.
   DrawRect(0, Display().Y - (SpriteSize().Y + 1), Display().X, (SpriteSize().Y + 1))
@@ -127,63 +145,45 @@ function SplashScene:UpdateTitle()
 
   -- We are going to do some string formatting in the next couple of lines to create the title for the top of the screen. We'll be concatenating the back, map name, and next text to create a title that instructs the player which map is currently loaded and if they can move forward or backward through the list of maps we originally loaded when configuring the scene.
 
-  -- To create our title we'll need to start with the two variables that represent the back and next indicators in the title.
-  local backText = "< BACK  "
-  local nextText = " NEXT >"
-
-  local optionChars = #backText + #nextText -- Should equal `14`
-
-  -- Next, we need to create an array to store the color offsets for each of the title's characters. We'll fill this up with values as we loop through all of the characters in the title and determine which ones should be highlighted or disabled.
-  local colorOffsets = {}
-
   -- Now we need to determine the maximum length of the map name that we can display. We'll do this by dividing the width of the screen, `Display().X`, by `4` which is the width of each character. Then we'll subtract the length of the back and next text which gives us the maximum amount of characters we can display for the map's name.
-  local maxChars = (Display().X / 4) - optionChars - 1 -- Should equal `16`
-
-  -- "< BACK "(7) [   empty space (30)  ] " NEXT >(7)"
-
-  -- print("spaces", maxChars, #mapName)
+  local maxChars = (Display().X / 4)
 
   if(#mapName >= maxChars) then
     mapName = mapName:sub(1, maxChars-3) .. "..."
   end
 
-  maxChars = maxChars - #mapName
-  local emptyChars = math.floor(maxChars/2)
+  local title = MessageBuilder(
+    {
+      -- {backText, self.currentMap == 1 and 2 or 3},
+      {mapName, 3},
+      -- {nextText, self.currentMap == self.mapCount and 2 or 3},
+    }
+  )
 
-  print("pad", maxChars, emptyChars, #mapName)
+  DisplayMessage(title, -1, true)
 
-  mapName = string.rep(" ", emptyChars) .. mapName .. string.rep(" ", maxChars - emptyChars)
+  local message = MessageBuilder
+  (
+    {
+      {"MAP ", 2},
+      {string.padLeft(tostring(self.currentMap), #tostring(self.mapCount), "0"), 3},
+      {"/" .. self.mapCount, 2},
+      {" START", 3},
+      {"(", 1},
+      {GetButtonMapping(Buttons.Start), 2},
+      {") ", 1},
+      {"PREVIOUS", self.currentMap == 1 and 1 or 3},
+      {"(", 1},
+      {GetButtonMapping(Buttons.Left), self.currentMap == 1 and 1 or 2},
+      {") ", 1},
+      {"NEXT", self.currentMap == self.mapCount and 1 or 3},
+      {"(", 1},
+      {GetButtonMapping(Buttons.Right), self.currentMap == self.mapCount and 1 or 2},
+      {") ", 1},
+    }
+  )
 
-  local leftHighlight = #backText
-  local rightHighlight = #backText + #mapName
-
-  local total = rightHighlight + #nextText
-
-  for i = 1, total do
-    
-    local offsetValue = 3
-
-    if(i < leftHighlight and self.currentMap == 1) then 
-
-      offsetValue =  2
-
-    elseif(i > rightHighlight and self.currentMap == self.mapCount) then
-      
-      offsetValue = 2
-
-    end
-
-    table.insert(colorOffsets, offsetValue)
-
-  end
-
-  -- Save the title incase we need to restore it later
-  self.title = backText .. mapName .. nextText
-
-  DisplayMessage({self.title, colorOffsets}, -1, true)
-
-  DrawText("PRESS START FOR EDITOR OR DROP MAP HERE", 3, Display().Y- 9, DrawMode.TilemapCache, "medium", 2, -4)
-
+  DisplayTitle(message, -1)
 
 end
 
@@ -217,23 +217,39 @@ function SplashScene:Update(timeDelta)
 
   if(self.startLock == false) then
   
-    -- In order to have our start text blink, we need to keep track of the time since the last update. If there is a trigger, i.e. the timer has reached the designated time, we'll toggle the `blink` flag.
-    if(TimerTriggered(BLINK_TIMER) == true) then
-
-      -- In Lua we can flip a boolean value by using the `not` operator. Here we set the `flickerVisible` flag to the opposite of what it currently is.
-      self.flickerVisible = not self.flickerVisible
-
-    end
-
     -- Now we can check if the start button has been released. We'll use this to determine if we should change scenes.
     if(Button(Buttons.Start, InputState.Released) == true) then
 
       -- It's important to note that by default, calling the `Button()` API without an `InputState` it would default to `InputState.Pressed`. This would be fine if we were testing for the player's input since we'd want that to trigger when the button is pressed. However, if we were testing for UI input, we would want to check for the `Released` state.
       
         self.startLock = true
-        self.flickerVisible = false
+ 
+        local title = MessageBuilder
+        (
+          {
+            {"CURRENT MAP SELECTED ", 2},
+            {"EDIT", 3},
+            {"(", 1},
+            {GetButtonMapping(Buttons.A), 2},
+            {") ", 1},
+            {"BACK", 3},
+            {"(", 1},
+            {GetButtonMapping(Buttons.B), 2},
+            {")", 1},
+          }
+        )
 
-        DisplayMessage("PRESS [A] TO EDIT or [B] TO CANCEL", -1, true)
+        DisplayTitle(title, -1, true)
+
+        local message = MessageBuilder(
+          {
+            {"CONTINUING WILL ", 2},
+            {"MAKE A COPY ", 3},
+            {"OF THIS MAP", 2}
+          }
+        )
+
+        DisplayMessage(message, -1)
 
     end
 
@@ -267,8 +283,6 @@ end
 
 function SplashScene:Draw()
 
-  if(self.flickerVisible == true) then
-    DrawText("      START FOR EDITOR    DROP MAP HERE", 3, Display().Y- 9, DrawMode.Sprite, "medium", 3, -4)
-  end
+  -- This is an empty function. There isn't anything that this scene should draw.
 
 end

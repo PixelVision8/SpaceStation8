@@ -258,7 +258,7 @@ function GameScene:RestartLevel()
 
   DrawText("SCORE", 14*8, Display().Y - 9, DrawMode.TilemapCache, "medium", 2, -4)
 
-  DisplayMessage(self.title, -1)
+  DisplayTitle(self.title, -1)
 
 end
 
@@ -459,13 +459,13 @@ function GameScene:Draw()
 
     end
 
-    DisplayMessage(message, -1, 1)
+    DisplayTitle(message, -1, 1)
 
   else
 
     -- TODO this is being called on every draw frame
 
-    DisplayMessage(self.title, -1, true)
+    DisplayTitle(self.title, -1, true)
   
   end
 
