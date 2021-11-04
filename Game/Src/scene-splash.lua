@@ -17,9 +17,7 @@ MAP_EXTENSION = ".png"
 function SplashScene:Init()
 
   -- The splash screen will be responsible for loading a tilemap into memory. We'll create a new instance of the `MapLoader` so the scene has access to it.
-  local _splash = {
-    mapLoader = MapLoader:Init()
-  }
+  local _splash = {}
 
   setmetatable(_splash, SplashScene) -- make Account handle lookup
 
@@ -111,12 +109,9 @@ function SplashScene:LoadMap(id)
   -- We need to save the id that is passed in so we can iterate over it in the `LoadNextMap()` and `LoadPreviousMap()` functions.
   self.currentMap = id
 
-  -- Now we need to convert the map path from a string into a workspace path.
-  self.currentMapPath = NewWorkspacePath(self.maps[id])
-
   -- It's important to call out that we are not doing any checks to make sure that the `id` is within the bounds of the maps array. We are just making the assumption that whatever calls this function passes in a valid id.
 
-  self.mapLoader:Load(self.currentMapPath)
+  mapLoader:Load(NewWorkspacePath(self.maps[id]))
 
   self:UpdateTitle()
 
@@ -135,14 +130,13 @@ function SplashScene:UpdateTitle()
 
    DrawRect(0, Display().Y - SpriteSize().Y - 1, Display().X, SpriteSize().Y+1)
 
-
   -- Once we have the top bar drawn, we can do the same for the bottom. This time we are going to shift the `y` position to the bottom of the screen by using `Display().Y` and then subtract a single row of pixels via `SpriteSize().Y` plus `1` additional pixel to move the bar into the correct position.
   DrawRect(0, Display().Y - (SpriteSize().Y + 1), Display().X, (SpriteSize().Y + 1))
 
   -- The bottom bar on the screen will always be `9` pixels high due to the game's UI needing an extra row of pixels to center the icons and other UI elements vertically in the bar.
 
-  local mapName = (self.currentMapPath == DEFAULT_MAP_PATH) and "DEFAULT" or string.upper(self.currentMapPath.EntityNameWithoutExtension:gsub(".spacestation8", ""))
-
+  local mapName = mapLoader:GetMapName()
+  
   -- We are going to do some string formatting in the next couple of lines to create the title for the top of the screen. We'll be concatenating the back, map name, and next text to create a title that instructs the player which map is currently loaded and if they can move forward or backward through the list of maps we originally loaded when configuring the scene.
 
   -- Now we need to determine the maximum length of the map name that we can display. We'll do this by dividing the width of the screen, `Display().X`, by `4` which is the width of each character. Then we'll subtract the length of the back and next text which gives us the maximum amount of characters we can display for the map's name.

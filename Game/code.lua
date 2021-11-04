@@ -8,11 +8,14 @@
 
 -- We use the `LoadScript()` API to load each Lua file inside of the `/Game/Src/` directory. We can use this API to break down game logic into smaller, self-contained files.
 
-LoadScript("scene-splash")
-LoadScript("scene-editor")
-LoadScript("scene-game")
-LoadScript("message-bar")
-LoadScript("utils")
+require "scene-splash"
+require "scene-editor"
+require "scene-game"
+require "message-bar"
+require "utils"
+require "map-loader"
+
+mapLoader = MapLoader:Init()
 
 -- Pixel Vision 8 will ignore scripts it's can't fine in the `/Game/Src/` directory which is helpful if you are just sketching out a game and where you want to put the logic.
 
@@ -23,7 +26,6 @@ SETTINGS_TOOL_PATH = "/PixelVisionOS/Tools/Settings/"
 -- The `NewWorkspacePath()` API allows us to create a path to the virtual filesystem Pixel Vision 8 sets up when it boots up. You can also add onto WorkspacePaths by calling `AppendFile()` or `AppendDirectory()` and it will return a new `WorkspacePath`. 
 
 DEFAULT_MAP_PATH = NewWorkspacePath("/Game/map.spacestation8.png")
-DEFAULT_SPRITE_PATH = NewWorkspacePath("/Game/sprites.png")
 USER_MAP_PATH = NewWorkspacePath("/User/Maps/")
 --[[
     Games can read files inside of their own directory. When a game is loaded into memory a virtual file system is created and mapped to the `/Game/` drive. This allows the game to read files from its own directory in a save way by constraining the file system to stay only in the `/Game/` directory. Once the game is loaded, you can access any file by using the `NewWorkspacePath()` API and passing in an absolute path to the file.

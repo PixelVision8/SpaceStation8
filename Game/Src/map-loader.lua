@@ -6,6 +6,8 @@
   Learn more about making Pixel Vision 8 games at http://docs.pixelvision8.com
 ]]--
 
+DEFAULT_SPRITE_PATH = NewWorkspacePath("/Game/sprites.png")
+
 -- We need to create a table to store all of the scene's functions.
 MapLoader = {}
 MapLoader.__index = MapLoader
@@ -44,6 +46,13 @@ function MapLoader:Init()
   -- Finally we can return the instance of the scene.
   return loader
 
+end
+
+function MapLoader:GetMapName()
+
+  -- Now we need to convert the map path from a string into a workspace path.
+  return (self.imagePath == DEFAULT_MAP_PATH) and "DEFAULT" or string.upper(self.imagePath.EntityNameWithoutExtension:gsub(".spacestation8", ""))
+  
 end
 
 -- We use the `Reset()` function to reset the scene's data. We need to use do this here because when we transition between scenes, the game attempts to reuse each one. If we don't reset all the values here it will start back up in the the previous state.

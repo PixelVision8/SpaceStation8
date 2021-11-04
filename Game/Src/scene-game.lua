@@ -5,10 +5,10 @@
 ]]--
 
 -- The game scene needs to load a few dependent scripts first.
-LoadScript("micro-platformer")
-LoadScript("entities")
-LoadScript("entity-player")
-LoadScript("entity-enemy")
+require "micro-platformer"
+require "entities"
+require "entity-player"
+require "entity-enemy"
 
 -- We need to create a table to store all of the scene's functions.
 GameScene = {}

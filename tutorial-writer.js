@@ -5,7 +5,7 @@ const chokidar = require('chokidar');
 
 function toMarkdown(filePath)
 {
-
+ 
     var text = fs.readFileSync(filePath, 'utf8');
     
     var basePath = path.dirname(filePath);
