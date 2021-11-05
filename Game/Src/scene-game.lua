@@ -98,7 +98,7 @@ function GameScene:Reset()
 
 
 
-  self.title = "PLAYING " .. string.upper(lastImagePath.EntityName:gsub(".spacestation8.png", ""))
+  self.title = "PLAYING " .. mapLoader:GetMapName()
 
   self.lives = self.maxLives
 

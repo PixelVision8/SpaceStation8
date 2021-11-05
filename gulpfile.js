@@ -1,10 +1,12 @@
 const gulp = require('gulp');
 const requireDir  = require('require-dir');
 const fs = require('fs');
-const libxmljs = require("libxmljs");
 require('os');
 require('gulp');
 requireDir('./Build/Tasks/', { recurse: true });
+
+var xpath = require('xpath')
+  , dom = require('xmldom').DOMParser
 
 process.env.RELEASE = "./Releases/"
 
@@ -20,11 +22,11 @@ process.env.FINAL = process.env.RELEASE  + "Final/"
 process.env.PROJECT = "./App/SpaceStation8.CoreDesktop.csproj"
 
 var xml = fs.readFileSync(process.env.PROJECT, "utf8");
-var xmlDoc = libxmljs.parseXml(xml);
+var xmlDoc = new dom().parseFromString(xml)
 
-process.env.APP_NAME = xmlDoc.get('//AssemblyName').text();
-process.env.NAME_SPACE = xmlDoc.get('//RootNamespace').text();
-process.env.VERSION = xmlDoc.get('//Version').text();
+process.env.APP_NAME = xpath.select("string(//AssemblyName)", xmlDoc);
+process.env.NAME_SPACE = xpath.select("string(//RootNamespace)", xmlDoc)
+process.env.VERSION = xpath.select("string(//Version)", xmlDoc)
 
 process.env.PLATFORMS = "osx-x64,win-x64,linux-x64";
 process.env.CURRENT_PLATFORM = "";

@@ -51,17 +51,23 @@ end
 function MapLoader:GetMapName()
 
   -- Now we need to convert the map path from a string into a workspace path.
-  return (self.imagePath == DEFAULT_MAP_PATH) and "DEFAULT" or string.upper(self.imagePath.EntityNameWithoutExtension:gsub(".spacestation8", ""))
+  return string.upper(self.imagePath.EntityNameWithoutExtension:gsub(BASE_EXTENSION, ""))
+  
+end
+
+function MapLoader:SaveMapName(newName)
+
+  self.imagePath = self.imagePath.ParentPath.AppendFile(newName .. FULL_EXTENSION)
   
 end
 
 -- We use the `Reset()` function to reset the scene's data. We need to use do this here because when we transition between scenes, the game attempts to reuse each one. If we don't reset all the values here it will start back up in the the previous state.
 function MapLoader:Load(path)
 
-  self.imagePath = path
+  
 
   -- Now that we have a path to the default map file, we need to load it into memory. We'll use the `ReadImage()` API to do this. We'll pass in the path to the image and a mask color that will determine what color pixels are considered transparent. Here we are using the second color, `#937AC5`, which we defined earlier as the transparent mask.
-  local mapImage = ReadImage(self.imagePath, MaskColor())
+  local mapImage = ReadImage(path, MaskColor())
 
   -- It's important to note that normally, the transparent mask is #FF00FF, which is magenta. Since our game is going to use a custom map template formate which we want to look like a screenshot of the level itself, we are going to make the default background color and transparent mask the same. In  this case, wherever the image parser see's `#937AC5` it will ignore that pixel including in the sprites at the bottom of the map png file.
 
@@ -169,18 +175,31 @@ function MapLoader:Load(path)
 
   end
 
+  -- The last thing we need to do is clean up the `imagePath` incase it's set to the default map path.
+  if(path == DEFAULT_MAP_PATH) then
+    path = UniqueFilePath(USER_LEVEL_PATH.AppendFile("untitled" .. FULL_EXTENSION))
+  end
+
+  self.imagePath = NewWorkspacePath(path.Path)
+
 end
 
-
 -- The `SaveLevel()` function accepts a path and saves the current map to the `/Game/Maps/` directory.
-function MapLoader:Save(newPath)
+function MapLoader:Save(path, unique) 
 
   -- Test to see if there is a value for the `newPath`.
-  if(newPath~= nil) then
-    
+  if(path== nil) then
+
+    -- We want to save the maps with a lowercase name
+    local mapName = string.lower(self:GetMapName())
+
     -- We need to save the last path so we know how to update the map if there are changes later on while editing it.
-    lastImagePath = UniqueFilePath(newPath)
+    path = NewWorkspacePath(USER_MAP_PATH).AppendFile(mapName .. FULL_EXTENSION)
     
+  end
+
+  if(unique == true) then
+    path = UniqueFilePath(path)
   end
 
   -- To save the map, we'll need to make a new Canvas first. We'll use the canvas to rebuild the map image, add text, and add the sprites at the bottom.  We'll create the canvas to match the size of the tilemap which is `160` x `152` pixels or `20` x `19` tiles.
@@ -225,27 +244,28 @@ function MapLoader:Save(newPath)
   local tmpImage = NewImage(mapCanvas.Width, mapCanvas.Height, mapCanvas.GetPixels(), {MaskColor(),Color(0), Color(1), Color(2), Color(3)})
 
   -- Finally, we have everything we need to save the image to the user's map folder. We can call the `SaveImage()` function and pass it the path and image we just created.
-  -- SaveImage(lastImagePath, tmpImage)
+  SaveImage(path, tmpImage)
+  -- print("Save", path)
 
 end
 
 
--- TODO THIS STILL NEEDS TO BE CLEANED UP
+-- -- TODO THIS STILL NEEDS TO BE CLEANED UP
 
-lastImagePath = NewWorkspacePath("/User/Levels/map.spacestation8.png")
+-- lastImagePath = NewWorkspacePath("/User/Levels/map.spacestation8.png")
 
 
--- The `OnLoad()` Function is responsible for loading a new map into memory. 
-function OnLoadImage(value)
+-- -- The `OnLoad()` Function is responsible for loading a new map into memory. 
+-- function OnLoadImage(value)
 
-  if(activeSceneId == SPLASH or activeSceneId == LOADER) then
+--   if(activeSceneId == SPLASH or activeSceneId == LOADER) then
     
-    value.RemapColors({MaskColor(),Color(0), Color(1), Color(2), Color(3)})
+--     value.RemapColors({MaskColor(),Color(0), Color(1), Color(2), Color(3)})
 
-    scenes[LOADER].defaultMapImage = value
+--     scenes[LOADER].defaultMapImage = value
 
-    SwitchScene(LOADER)
+--     SwitchScene(LOADER)
 
-  end
+--   end
 
-end
+-- end

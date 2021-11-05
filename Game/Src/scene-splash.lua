@@ -4,7 +4,7 @@
     Learn more about making Pixel Vision 8 games at http://docs.pixelvision8.com
 ]]--
 
-LoadScript("map-loader")
+require "map-loader"
 
 -- We need to create a table to store all of the scene's functions.
 SplashScene = {}
@@ -53,16 +53,31 @@ function SplashScene:Reset()
 
   end
 
-  -- Let's save the total number of maps so we don't have to keep calling the `#` operator and calculate it every time we need to display the map count.
-  self.mapCount = #self.maps
 
   -- We always want to start with the default map. We use the `table.insert()` function to add the default map path to the beginning of the list of map paths.
   table.insert(self.maps, 1, DEFAULT_MAP_PATH)
 
   -- If you are new to Lua or come from another programing language, its important to point out that arrays, which are indexed tables in Lua, start at 1. So by calling `table.insert()` and supplying `1` as the index, we are inserting the default map path at the beginning of the maps array.
 
+  -- Let's save the total number of maps so we don't have to keep calling the `#` operator and calculate it every time we need to display the map count.
+  self.mapCount = #self.maps
+
+  local startId = 1
+
+  if(mapLoader.imagePath ~= nil) then
+    for i = 1, self.mapCount do
+
+      print(i, self.maps[i].Path, mapLoader.imagePath.Path)
+
+      if(self.maps[i].Path == mapLoader.imagePath.Path) then
+        startId = i
+        break
+      end
+    end
+  end
+
   -- Now we are going to call the `LoadMap()` function in order to load the first map in the list.
-  self:LoadMap(1)
+  self:LoadMap(startId)
 
   -- Since hte `DisplayTitle()` function uses the `DrawColoredText()` API, we can pass in a color map for each character by making the `message` variable a table. The first item is the text for the message and the second is an array of colors offsets for each character.
 
@@ -93,8 +108,6 @@ end
 
 -- This function is called when the message displaying the game's title disappears. We use this to tell the scene that it's fully loaded and ready to be start looking for player input to load a map or start the game.
 function SplashScene:OnLoad()
-
-  print("On Load")
 
   -- We set this `loaded` flag to true so the update function knows it can execute its code.
   self.loaded = true
@@ -135,7 +148,7 @@ function SplashScene:UpdateTitle()
 
   -- The bottom bar on the screen will always be `9` pixels high due to the game's UI needing an extra row of pixels to center the icons and other UI elements vertically in the bar.
 
-  local mapName = mapLoader:GetMapName()
+  local mapName = self.currentMap == 1 and "DEFAULT MAP" or mapLoader:GetMapName()
   
   -- We are going to do some string formatting in the next couple of lines to create the title for the top of the screen. We'll be concatenating the back, map name, and next text to create a title that instructs the player which map is currently loaded and if they can move forward or backward through the list of maps we originally loaded when configuring the scene.
 
@@ -238,8 +251,8 @@ function SplashScene:Update(timeDelta)
         local message = MessageBuilder(
           {
             {"CONTINUING WILL ", 2},
-            {"MAKE A COPY ", 3},
-            {"OF THIS MAP", 2}
+            {self.currentMap == 1 and "MAKE A COPY OF" or "MODIFY", 3},
+            {" THIS MAP", 2}
           }
         )
 

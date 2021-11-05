@@ -1,5 +1,5 @@
 --[[
-  ## Space Station 8 `scene-editor.lua`
+  ## Space Station 8 `scene-self.lua`
 
   
   
@@ -7,57 +7,27 @@
 ]]--
 
 
-MODE_DRAW, MODE_OPTIONS, MODE_RENAME = 1, 2, 3
+MODE_DRAW, MODE_OPTIONS, MODE_RENAME, MODE_STARTING = 1, 2, 3, 4
 
 -- We need to define these global modes before we requite our plugins or they will not have access to these
 
-local brushPlugin = require "editor-plugin-brush"
-local optionsPlugin = require "editor-plugin-options"
-local mousePlugin = require "editor-plugin-mouse"
+local brushPlugin = require "scene-editor-brush"
+local optionsPlugin = require "scene-editor-options"
+local mousePlugin = require "scene-editor-mouse"
 
 -- We need to create a table to store all of the scene's functions.
 EditorScene = {}
 EditorScene.__index = EditorScene
 
--- This is a global table that we can use for plugins to register themselves with the editor. When the scene is instantiated, we'll map this table to the scene's `plugins` table.
-_G["editorPlugins"] = {}
-
--- We need to load the plugins after the Editor scene has been created so we can attach the plugin function to the scene's scope.
--- LoadScript("editor-plugin-cursor")
--- LoadScript("editor-plugin-options")
-
-
-
-
-INPUT_LOCK_TIMER = "InputLockTimer"
-INPUT_TIMER = "InputTimer"
-
 function EditorScene:Init()
 
   local _editor = {
-    -- brushPos = NewPoint(0, 0),
-    -- cursorBounds = NewRect(0, 1, (Display().C) - 1, (Display().R) - 3),
     currentTile = 0,
-    
-    -- blink = false,
     altTile = false,
     tileId = 0,
-    -- selectionX = 0,
-    spriteId = 0,
-
+    spriteId = 0
   }
-
-  -- Look for editor plugins
-  _editor.plugins = {
-    brushPlugin,
-    optionsPlugin,
-    -- mousePlugin
-  }
-
-  _editor.totalPlugins = #_editor.plugins
-
-  NewTimer(INPUT_TIMER, 100)
-
+  
   _editor.tiles = {
     {00, 00}, -- Empty
     {01, 20}, -- Door
@@ -81,6 +51,16 @@ function EditorScene:Init()
     {19, 19}, -- Pillar Top
   }
 
+
+  -- This is a global table that we can use for plugins to register themselves with the self. When the scene is instantiated, we'll map this table to the scene's `plugins` table.
+  _editor.plugins = {
+    brushPlugin,
+    mousePlugin,
+    optionsPlugin,
+  }
+
+  _editor.totalPlugins = #_editor.plugins
+
   _editor.mode = MODE_DRAW
 
   setmetatable(_editor, EditorScene) -- make Account handle lookup
@@ -98,7 +78,7 @@ function EditorScene:Reset()
 
   self:DrawEditorUI()
 
-  NewTimer(INPUT_LOCK_TIMER, 100)
+  -- NewTimer(INPUT_LOCK_TIMER, 100)
 
 end
 
@@ -112,7 +92,6 @@ function EditorScene:DrawEditorUI()
   local title = MessageBuilder
   (
     {
-      
       {"DRAW", 3},
       {"(", 1},
       {GetButtonMapping(Buttons.A), 2},
@@ -121,13 +100,13 @@ function EditorScene:DrawEditorUI()
       {"(", 1},
       {GetButtonMapping(Buttons.B), 2},
       {") ", 1},
-      {"NEXT", 3},
+      {"RUN", 3},
       {"(", 1},
-      {GetButtonMapping(Buttons.Select), 2},
+      {GetButtonMapping(Buttons.Start), 2},
       {") ", 1},
       {"OPTIONS", 3},
       {"(", 1},
-      {GetButtonMapping(Buttons.Start), 2},
+      {GetButtonMapping(Buttons.Select), 2},
       {")", 1},
     }
   )
@@ -138,19 +117,7 @@ function EditorScene:DrawEditorUI()
 
 end
 
-function EditorScene:Update(timeDelta)
 
-  for i = 1, self.totalPlugins do
-
-    local plugin = self.plugins[i]
-
-    if(plugin ~= nil and plugin.Update ~= nil) then
-      plugin.Update(self, timeDelta)
-    end
-    
-  end
-
-end
 
 function EditorScene:FlipTile()
 
@@ -158,13 +125,13 @@ function EditorScene:FlipTile()
 
 end
 
-function EditorScene:DrawTile(x, y)
+function EditorScene:DrawTile(column, row)
 
   local value = self.spriteId > 0 and self.spriteId or -1
 
-  if (Tile(x, y).SpriteId ~= value) then
+  if (Tile(column, row).SpriteId ~= value) then
     
-    Tile(x, y, value)
+    Tile(column, row, value)
 
   end
 
@@ -177,16 +144,88 @@ function EditorScene:SelectTile(id)
   
 end
 
+
+
+function EditorScene:Update(timeDelta)
+
+  if(self.mode == MODE_DRAW and Button(Buttons.Start, InputState.Released)) then
+
+    self.mode = MODE_STARTING
+
+    local title = MessageBuilder
+    (
+      {
+        
+        {"PLAY", 3},
+        {"(", 1},
+        {GetButtonMapping(Buttons.A), 2},
+        {") ", 1},
+        {"BACK", 3},
+        {"(", 1},
+        {GetButtonMapping(Buttons.B), 2},
+        {") ", 1},
+      }
+    )
+
+    DisplayTitle(title, -1)
+
+    local title = MessageBuilder
+    (
+      {
+        {"PLAYING WILL AUTOMATICALLY ", 2},
+        {"SAVE THE MAP", 3},
+      }
+    )
+
+    DisplayMessage(title, -1)
+
+  end
+
+  if(self.mode == MODE_STARTING) then
+
+    if(Button(Buttons.A, InputState.Released)) then
+
+      mapLoader:Save()
+
+      SwitchScene(RUN)
+
+    elseif(Button(Buttons.B, InputState.Released)) then
+
+      self.mode = MODE_DRAW
+
+      self:DrawEditorUI()
+
+    end
+  
+  else
+
+    self:UsePlugins("Update", timeDelta)
+
+    self.tileId = self.currentTile + 1
+    self.selectionX = (self.tileId - 1) * 8
+
+    self.spriteId = self.tiles[self.currentTile + 1][self.altTile == false and 1 or 2]
+
+  end
+
+end
+
 function EditorScene:Draw()
 
+  self:UsePlugins("Draw")
+
+end
+
+function EditorScene:UsePlugins(action, timeDelta)
+  
   for i = 1, self.totalPlugins do
 
     local plugin = self.plugins[i]
 
-    if(plugin ~= nil and plugin.Draw ~= nil) then
-      plugin.Draw(self, timeDelta)
+    if(plugin ~= nil and plugin[action] ~= nil) then
+      plugin[action](self, timeDelta)
     end
-    
+   
   end
 
 end

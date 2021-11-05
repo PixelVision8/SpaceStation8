@@ -23,9 +23,15 @@ mapLoader = MapLoader:Init()
 USER_LEVEL_PATH = NewWorkspacePath("/User/Maps/")
 SETTINGS_TOOL_PATH = "/PixelVisionOS/Tools/Settings/"
 
+
+DEFAULT_EXTENSION = ".png"
+BASE_EXTENSION = ".spacestation8"
+FULL_EXTENSION = BASE_EXTENSION .. DEFAULT_EXTENSION
+
 -- The `NewWorkspacePath()` API allows us to create a path to the virtual filesystem Pixel Vision 8 sets up when it boots up. You can also add onto WorkspacePaths by calling `AppendFile()` or `AppendDirectory()` and it will return a new `WorkspacePath`. 
 
-DEFAULT_MAP_PATH = NewWorkspacePath("/Game/map.spacestation8.png")
+
+DEFAULT_MAP_PATH = NewWorkspacePath("/Game/map" .. FULL_EXTENSION)
 USER_MAP_PATH = NewWorkspacePath("/User/Maps/")
 --[[
     Games can read files inside of their own directory. When a game is loaded into memory a virtual file system is created and mapped to the `/Game/` drive. This allows the game to read files from its own directory in a save way by constraining the file system to stay only in the `/Game/` directory. Once the game is loaded, you can access any file by using the `NewWorkspacePath()` API and passing in an absolute path to the file.

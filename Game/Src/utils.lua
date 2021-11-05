@@ -40,7 +40,9 @@ function GetButtonMapping(button)
 
     local useController = ControllerConnected(0)
 
-    if(button == Buttons.Left) then
+    if(button == Buttons.Up) then
+        return "^"
+    elseif(button == Buttons.Left) then
         return "<"
     elseif(button == Buttons.Right) then
         return ">"
