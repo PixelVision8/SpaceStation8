@@ -63,7 +63,6 @@ jobs:
           IFS='.' read -ra my_array <<< "${{ steps.compute_tag.outputs.next_tag }}"
           echo "CURRENT=${my_array[0]:1}.$((${my_array[1]} - 1)).$((${my_array[2]}))" >> $GITHUB_ENV
           echo "PREVIOUS=${my_array[0]:1}.$((${my_array[1]} - 2)).0" >> $GITHUB_ENV
-
       - name: Create Changelog
         id: changelog
         uses: jimschubert/beast-changelog-action@v1
@@ -82,7 +81,6 @@ jobs:
           REPORT="${REPORT//$'\n'/'%0A'}"
           REPORT="${REPORT//$'\r'/'%0D'}"
           echo "REPORT=$REPORT" >> $GITHUB_ENV
-
      # Setup dotnet v5.0.x
       - name: Setup .NET Core
         uses: actions/setup-dotnet@v1
@@ -97,10 +95,9 @@ jobs:
           sed -i 's/0.0.0/${{env.CURRENT}}/g' App/Content/bios.json
           sed -i 's/0.0.0/${{env.CURRENT}}/g' App/SpaceStation8.CoreDesktop.csproj
           npm install
+          npm install gulp -g
           echo $VERSION
-          ls -l
           gulp
-
       # Update the release with the change log
       - name: Update Release
         id: update_release
@@ -111,20 +108,10 @@ jobs:
           tag: v${{env.CURRENT}}
           gzip: false
           body: >
-            This is a stable build of Space Station 8 based on the Github source code. You can download a build for Windows, Mac, and Linux below. Please make sure to backup your game and maps before running this or any new build of Space Station 8.
-
+            This is a stable build of Space Station 8 based on the Github source code. You can download a build for Windows, Mac, and Linux (x64 & ARM 64) below. Please make sure to backup your game's before running this or any new build of Space Station 8.
             Here is a list of the most recent changes:
-
-
             ${{ env.REPORT }}. In addition, you can see the current open issues [here](https://github.com/PixelVision8/SpaceStation8/issues) or use one of the following links to submit a new [bug](https://github.com/PixelVision8/SpaceStation8/issues/new?assignees=jessefreeman&labels=bug&template=bug_report.md), [feature](https://github.com/PixelVision8/SpaceStation8/issues/new?assignees=jessefreeman&labels=bug&template=feature_request.md) or [question](https://github.com/PixelVision8/SpaceStation8/issues/new?assignees=jessefreeman&labels=bug&template=question.md). To learn more about Pixel Vision 8, check out [the documentation](https://docs.pixelvision8.com/), explore [the examples](https://www.pixelvision8.com/examples), join [the Discord server](https://discord.gg/pixelvision8), and visit [the main website](https://www.pixelvision8.com/).
           files: >
-            spacestation8-v${{env.CURRENT}}-macos.zip:Releases/Final/spacestation8-macos.zip
+            spacestation8-v${{env.CURRENT}}-macOS.zip:Releases/Final/spacestation8-macOS.zip
             spacestation8-v${{env.CURRENT}}-win.zip:Releases/Final/spacestation8-win.zip
             spacestation8-v${{env.CURRENT}}-linux.zip:Releases/Final/spacestation8-linux.zip
-      
-      - name: Update Wiki
-        id: update_wiki
-        uses: OrlovM/Wiki-Action@v1
-        with:
-          path: 'Docs'
-          token: ${{ secrets.GITHUB_TOKEN }}
