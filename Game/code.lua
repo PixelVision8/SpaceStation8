@@ -49,8 +49,8 @@ local activeSceneId = 1
 
 -- Each Lua script has it's own scope so we can hide these values from other scripts we load up by making them local.
 
-local topMessageBar = MessageBar:Init(-1)
-local bottomMessageBar = MessageBar:Init(Display().Y - 9)
+local topMessageBar = MessageBar:Init(0, SpriteSize().Y-1, -1)
+local bottomMessageBar = MessageBar:Init(Display().Y - 9, 9, 0)
 
 
 
@@ -164,10 +164,6 @@ function Draw()
   
   end
 
-  -- Redraw the menu by call its `DrawMenu()` function.
-  topMessageBar:Draw()
-  bottomMessageBar:Draw()
-
 end
 
 function DisplayTitle(value, time, centered, onClearCallback)
@@ -191,5 +187,27 @@ end
 function ClearMessage()
 
   bottomMessageBar:ClearMessage()
+
+end
+
+-- The `OnLoad()` Function is responsible for loading a new map into memory. 
+function OnLoadImage(value)
+
+  if(activeSceneId == SPLASH) then
+
+    -- TODO need to copy the image to the map folder then load it (This passes in the raw image but not the file name?)
+
+    -- mapLoader.imagePath.Path = NewWorkspacePath(value)
+
+    print("Load map", value)
+-- ewWorkspacePath(self.maps[id]))
+
+    -- value.RemapColors({MaskColor(),Color(0), Color(1), Color(2), Color(3)})
+
+    -- scenes[LOADER].defaultMapImage = value
+
+    SwitchScene(SPLASH)
+
+  end
 
 end

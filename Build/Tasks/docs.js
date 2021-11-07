@@ -4,8 +4,6 @@ const replace = require('gulp-replace');
 const path = require("path"); 
 const fs = require('fs');
 
-
-
 gulp.task('docs-concatenate-markdown', function(cb){
 
     var rootPath = path.resolve('Docs/images/') + "/"

@@ -10,7 +10,6 @@ require "map-loader"
 SplashScene = {}
 SplashScene.__index = SplashScene
 
--- BLINK_TIMER = "blinktimer"
 MAP_EXTENSION = ".png"
 
 
@@ -36,6 +35,12 @@ function SplashScene:Reset()
 
   -- We are going to load all of the map files inside of the `USER_MAP_PATH` folder. In order to load them later on, we'll add each map to this table.
   self.maps = {}
+
+  if(PathExists(USER_MAP_PATH) == false) then
+    
+    CreateDirectory(USER_MAP_PATH)
+
+  end
   
   -- The `GetEntities()` function will return all of the items at a given path. We are going to use this to get all of the files that are in the `/User/Maps/` path which we define in the `code.lua`'s `USER_MAP_PATH' constant.
   local entities = GetEntities(USER_MAP_PATH)
@@ -66,8 +71,6 @@ function SplashScene:Reset()
 
   if(mapLoader.imagePath ~= nil) then
     for i = 1, self.mapCount do
-
-      print(i, self.maps[i].Path, mapLoader.imagePath.Path)
 
       if(self.maps[i].Path == mapLoader.imagePath.Path) then
         startId = i

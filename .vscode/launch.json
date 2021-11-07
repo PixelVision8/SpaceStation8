@@ -4,12 +4,11 @@
     // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
     "version": "0.2.0",
     "configurations": [
-
         {
-            "name": ".NET Core Launch (console)",
+            "name": "Space Station 8 (Debug)",
             "type": "coreclr",
             "request": "launch",
-            "preLaunchTask": "build",
+            "preLaunchTask": "gulp-build",
             "program": "${workspaceFolder}/App/bin/Debug/net5.0/SpaceStation8.dll",
             "args": ["Game"],
             "cwd": "${workspaceFolder}/",

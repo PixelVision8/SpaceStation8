@@ -2,44 +2,12 @@
     "version": "2.0.0",
     "tasks": [
         {
-            "label": "build",
-            "command": "dotnet",
-            "type": "process",
+            "type": "shell",
+            "label": "gulp-build",
+            "command": "gulp",
             "args": [
-                "build",
-                "${workspaceFolder}/App/SpaceStation8.CoreDesktop.csproj",
-                "/property:PublishSingleFile=false",
-                "/property:SelfContained=false",
-                "/consoleloggerparameters:NoSummary"
+                "default"
             ],
-            "problemMatcher": "$msCompile"
-        },
-        {
-            "label": "publish",
-            "command": "dotnet",
-            "type": "process",
-            "args": [
-                "publish",
-                "${workspaceFolder}/App/SpaceStation8.CoreDesktop.csproj",
-                "/property:PublishSingleFile=false",
-                "/property:SelfContained=false",
-                "/consoleloggerparameters:NoSummary"
-            ],
-            "problemMatcher": "$msCompile"
-        },
-        {
-            "label": "watch",
-            "command": "dotnet",
-            "type": "process",
-            "args": [
-                "watch",
-                "run",
-                "${workspaceFolder}/App/SpaceStation8.CoreDesktop.csproj",
-                "/property:PublishSingleFile=false",
-                "/property:SelfContained=false",
-                "/consoleloggerparameters:NoSummary"
-            ],
-            "problemMatcher": "$msCompile"
         }
     ]
 }

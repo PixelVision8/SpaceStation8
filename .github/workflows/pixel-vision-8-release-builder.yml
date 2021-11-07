@@ -99,7 +99,7 @@ jobs:
           npm install
           npm install gulp -g
           echo $VERSION
-          gulp
+          gulp package
 
       # Update the release with the change log
       - name: Update Release
@@ -111,7 +111,7 @@ jobs:
           tag: v${{env.CURRENT}}
           gzip: false
           body: >
-            This is a stable build of Space Station 8 based on the Github source code. You can download a build for Windows, Mac, and Linux (x64 & ARM 64) below. Please make sure to backup your game's before running this or any new build of Space Station 8.
+            This is a stable build of Space Station 8 based on the Github source code. You can download a build for Windows, Mac, and Linux below. Please make sure to backup your game and maps before running this or any new build of Space Station 8.
 
             Here is a list of the most recent changes:
 

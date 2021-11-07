@@ -43,6 +43,11 @@ function GameScene:Init()
 
   }
 
+  local sprite = NewMetaSprite("o2-bar", {35, 37, 37, 37, 37, 37}, 6)
+  sprite.AddSprite(36, 8, 0)
+  sprite.AddSprite(36, 5 * SpriteSize().X, 0, true)
+  
+  
   setmetatable(_game, GameScene) -- make Account handle lookup
 
   _game:RegisterFlags()
@@ -96,13 +101,38 @@ end
 
 function GameScene:Reset()
 
-
-
-  self.title = "PLAYING " .. mapLoader:GetMapName()
+  
 
   self.lives = self.maxLives
 
   self:RestartLevel()
+  
+
+end
+
+function GameScene:RedrawUI()
+
+  ClearTitle()
+  ClearMessage()
+
+  self.title = MessageBuilder(
+    {
+      {"PLAYING ", 2},
+      {mapLoader:GetMapName(), 3}
+    }
+  )
+
+  self.message = MessageBuilder(
+    {
+      {"                      SCORE", 2}
+    }
+  )
+
+  DisplayTitle(self.title, -1)
+
+  DisplayMessage(self.message, -1)
+
+  DrawMetaSprite("o2-bar", 7 * 8, Display().Y - SpriteSize().Y, false, false, DrawMode.TilemapCache)
 
 end
 
@@ -248,17 +278,9 @@ function GameScene:RestartLevel()
 
   end
   
-  -- DrawRect(0, Display().Y - 9, Display().X, 9, 0)
 
+  self:RedrawUI()
 
-  DrawMetaSprite("top-bar", 0, 0, false, false, DrawMode.TilemapCache)
-  DrawMetaSprite("bottom-hud", 0, Display().Y - 8, false, false, DrawMode.TilemapCache)
-  DrawMetaSprite("ui-o2-border", 8 * 8, Display().Y - 8, false, false, DrawMode.TilemapCache)
-  DrawMetaSprite("ui-o2-border", (8+4) * 8, Display().Y - 8, true, false, DrawMode.TilemapCache)
-
-  DrawText("SCORE", 14*8, Display().Y - 9, DrawMode.TilemapCache, "medium", 2, -4)
-
-  DisplayTitle(self.title, -1)
 
 end
 

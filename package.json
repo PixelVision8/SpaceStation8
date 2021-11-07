@@ -1,5 +1,5 @@
 {
-  "name": "pixelvision8",
+  "name": "Space Station 8",
   "version": "0.9.0",
   "description": "",
   "main": "index.js",
@@ -9,7 +9,6 @@
   "author": "Jesse Freeman",
   "license": "ISC",
   "dependencies": {
-    "@mapbox/node-pre-gyp": "^1.0.6",
     "del": "^6.0.0",
     "gulp": "^4.0.2",
     "gulp-dotnet-cli": "^1.1.0",
@@ -21,5 +20,8 @@
     "require-dir": "^1.2.0",
     "xmldom": "^0.6.0",
     "xpath": "^0.0.32"
+  },
+  "devDependencies": {
+    "gulp-shell": "^0.8.0"
   }
 }

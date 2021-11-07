@@ -185,7 +185,7 @@ function MapLoader:Load(path)
 end
 
 -- The `SaveLevel()` function accepts a path and saves the current map to the `/Game/Maps/` directory.
-function MapLoader:Save(path, unique) 
+function MapLoader:Save(path, unique)
 
   -- Test to see if there is a value for the `newPath`.
   if(path== nil) then
@@ -245,27 +245,5 @@ function MapLoader:Save(path, unique)
 
   -- Finally, we have everything we need to save the image to the user's map folder. We can call the `SaveImage()` function and pass it the path and image we just created.
   SaveImage(path, tmpImage)
-  -- print("Save", path)
 
 end
-
-
--- -- TODO THIS STILL NEEDS TO BE CLEANED UP
-
--- lastImagePath = NewWorkspacePath("/User/Levels/map.spacestation8.png")
-
-
--- -- The `OnLoad()` Function is responsible for loading a new map into memory. 
--- function OnLoadImage(value)
-
---   if(activeSceneId == SPLASH or activeSceneId == LOADER) then
-    
---     value.RemapColors({MaskColor(),Color(0), Color(1), Color(2), Color(3)})
-
---     scenes[LOADER].defaultMapImage = value
-
---     SwitchScene(LOADER)
-
---   end
-
--- end
