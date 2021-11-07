@@ -65,9 +65,9 @@ gulp.task('reset-platforms', function(cb)
 
 // Perform all of the builds and packages up each exe
 gulp.task(
-  'package', 
+  'default', 
   gulp.series( tasks )
 );
 
 // The default task just build the game locally which you can launch and debug
-gulp.task('default', gulp.series([shell.task('dotnet build ' + process.env.PROJECT + ' -p:SelfContained=false -p:PublishSingleFile=false -p:GenerateFullPaths=true')]))
+gulp.task('launch', gulp.series([shell.task('dotnet build ' + process.env.PROJECT + ' -p:SelfContained=false -p:PublishSingleFile=false -p:GenerateFullPaths=true')]))
