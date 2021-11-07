@@ -97,8 +97,8 @@ jobs:
           sed -i 's/0.0.0/${{env.CURRENT}}/g' App/Content/bios.json
           sed -i 's/0.0.0/${{env.CURRENT}}/g' App/SpaceStation8.CoreDesktop.csproj
           npm install
-          npm install gulp -g
           echo $VERSION
+          ls -l
           gulp
 
       # Update the release with the change log
