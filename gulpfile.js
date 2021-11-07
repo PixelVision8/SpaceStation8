@@ -64,10 +64,13 @@ gulp.task('reset-platforms', function(cb)
 )
 
 // Perform all of the builds and packages up each exe
-gulp.task(
-  'package', 
-  gulp.series( tasks )
-);
+// gulp.task(
+//   'package', 
+//   gulp.series( tasks )
+// );
 
 // The default task just build the game locally which you can launch and debug
-gulp.task('default', gulp.series([shell.task('dotnet build ' + process.env.PROJECT + ' -p:SelfContained=false -p:PublishSingleFile=false -p:GenerateFullPaths=true')]))
+// gulp.task('default', gulp.series([shell.task('dotnet build ' + process.env.PROJECT + ' -p:SelfContained=false -p:PublishSingleFile=false -p:GenerateFullPaths=true')]))
+
+// The default task just build the game locally which you can launch and debug
+gulp.task('default', gulp.series([shell.task('dotnet build App/SpaceStation8.CoreDesktop.csproj -p:SelfContained=false -p:PublishSingleFile=false -p:GenerateFullPaths=true')]))
