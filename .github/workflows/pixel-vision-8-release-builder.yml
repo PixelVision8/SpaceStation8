@@ -76,8 +76,7 @@ jobs:
       - name: save Changelog
         id: log
         run: |
-          REPORT="$(cat .github/CHANGELOG.md)"
-          echo "REPORT=$REPORT" >> $GITHUB_ENV -Encoding utf8 -Append
+          echo $(cat .github/CHANGELOG.md) >> $GITHUB_ENV
      # Setup dotnet v5.0.x
       - name: Setup .NET Core
         uses: actions/setup-dotnet@v1
