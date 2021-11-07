@@ -1,7 +1,7 @@
 --[[
     ## Space Station 8 `editor-plugin-options.lua`
 
-]]
+]]--
 
 -- Create the plugin table
 local editorPlugin = {

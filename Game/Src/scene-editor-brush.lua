@@ -1,7 +1,7 @@
 --[[
     ## Space Station 8 `editor-plugin-brush.lua`
 
-]]
+]]--
 
 INPUT_TIMER = "InputTimer"
 BLINK_TIMER = "BlinkTimer"

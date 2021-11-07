@@ -1,7 +1,8 @@
 --[[
     ## Space Station 8 `editor-plugin-mouse.lua`
 
-]]
+]]--
+
 MOUSE_TIMER = "MouseTimer"
 
 -- Create the plugin table

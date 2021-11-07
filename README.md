@@ -1,4 +1,5 @@
 # Space Station 8
+![Pixel Vision 8](https://github.com/PixelVision8/SpaceStation8/workflows/Space%20Station%208/badge.svg)
 
 **Space Station 8** is a `Micro Platformer` created [in 72 hours for Ludum Dare 49](https://ldjam.com) based on a game I used to play on my original Macintosh called [Spacestation Pheta](https://en.wikipedia.org/wiki/Spacestation_Pheta). Space Station 8 is also heavily inspired by [Bitsy](http://make.bitsy.org) and my Fantasy Console, [Pixel Vision 8](https://pixelvision8.com), which I used to create the game.
 
