@@ -97,7 +97,7 @@ jobs:
           npm install
           npm install gulp -g
           echo $VERSION
-          gulp
+          gulp package
       # Update the release with the change log
       - name: Update Release
         id: update_release
@@ -115,3 +115,10 @@ jobs:
             spacestation8-v${{env.CURRENT}}-macos.zip:Releases/Final/spacestation8-macos.zip
             spacestation8-v${{env.CURRENT}}-win.zip:Releases/Final/spacestation8-win.zip
             spacestation8-v${{env.CURRENT}}-linux.zip:Releases/Final/spacestation8-linux.zip
+      
+      - name: Update Wiki
+        id: update_wiki
+        uses: OrlovM/Wiki-Action@v1
+        with:
+          path: 'Docs'
+          token: ${{ secrets.GITHUB_TOKEN }}
