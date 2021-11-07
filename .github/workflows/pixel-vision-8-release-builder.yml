@@ -118,7 +118,7 @@ jobs:
 
             ${{ env.REPORT }}. In addition, you can see the current open issues [here](https://github.com/PixelVision8/SpaceStation8/issues) or use one of the following links to submit a new [bug](https://github.com/PixelVision8/SpaceStation8/issues/new?assignees=jessefreeman&labels=bug&template=bug_report.md), [feature](https://github.com/PixelVision8/SpaceStation8/issues/new?assignees=jessefreeman&labels=bug&template=feature_request.md) or [question](https://github.com/PixelVision8/SpaceStation8/issues/new?assignees=jessefreeman&labels=bug&template=question.md). To learn more about Pixel Vision 8, check out [the documentation](https://docs.pixelvision8.com/), explore [the examples](https://www.pixelvision8.com/examples), join [the Discord server](https://discord.gg/pixelvision8), and visit [the main website](https://www.pixelvision8.com/).
           files: >
-            spacestation8-v${{env.CURRENT}}-macOS.zip:Releases/Final/spacestation8-macOS.zip
+            spacestation8-v${{env.CURRENT}}-macos.zip:Releases/Final/spacestation8-macos.zip
             spacestation8-v${{env.CURRENT}}-win.zip:Releases/Final/spacestation8-win.zip
             spacestation8-v${{env.CURRENT}}-linux.zip:Releases/Final/spacestation8-linux.zip
       
