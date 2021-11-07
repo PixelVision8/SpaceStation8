@@ -99,7 +99,8 @@ jobs:
           npm install
           npm install gulp -g
           echo $VERSION
-          gulp
+          dotnet build App/SpaceStation8.CoreDesktop.csproj  -p:SelfContained=false -p:PublishSingleFile=false -p:GenerateFullPaths=true
+          gulp -help
 
       # Update the release with the change log
       - name: Update Release
