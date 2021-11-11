@@ -9,7 +9,7 @@
             "type": "coreclr",
             "request": "launch",
             "preLaunchTask": "gulp-build",
-            "program": "${workspaceFolder}/App/bin/Debug/net5.0/SpaceStation8.dll",
+            "program": "${workspaceFolder}/App/bin/Debug/SpaceStation8.dll",
             "args": ["Game"],
             "cwd": "${workspaceFolder}/",
             "console": "internalConsole",

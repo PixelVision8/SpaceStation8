@@ -64,11 +64,11 @@ jobs:
           echo "CURRENT=${my_array[0]:1}.$((${my_array[1]} - 1)).$((${my_array[2]}))" >> $GITHUB_ENV
           echo "PREVIOUS=${my_array[0]:1}.$((${my_array[1]} - 2)).0" >> $GITHUB_ENV
 
-     # Setup dotnet v5.0.x
+     # Setup dotnet v6.0.x
       - name: Setup .NET Core
         uses: actions/setup-dotnet@v1
         with:
-          dotnet-version: 5.0.x
+          dotnet-version: 6.0.x
 
       - name: Use Node.js
         uses: actions/setup-node@v1
